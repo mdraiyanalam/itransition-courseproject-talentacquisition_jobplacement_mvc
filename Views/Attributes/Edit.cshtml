@@ -1,0 +1,54 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.AttributeDefinition
+
+@{
+    ViewData["Title"] = "Edit Attribute";
+}
+
+<h1>Edit Attribute</h1>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">Attribute Name</label>
+                <input asp-for="Name" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Type</label>
+                <select asp-for="Type" class="form-select" required>
+                    <option value="Text">Text</option>
+                    <option value="Number">Number</option>
+                    <option value="Dropdown">Dropdown</option>
+                    <option value="Date">Date</option>
+                    <option value="Boolean">Yes/No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Options (for Dropdown only)</label>
+                <textarea asp-for="Options" class="form-control" rows="3"
+                          placeholder="Option1, Option2, Option3"></textarea>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3 form-check">
+                <input asp-for="IsRequired" class="form-check-input" type="checkbox" />
+                <label asp-for="IsRequired" class="form-check-label">Is Required?</label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

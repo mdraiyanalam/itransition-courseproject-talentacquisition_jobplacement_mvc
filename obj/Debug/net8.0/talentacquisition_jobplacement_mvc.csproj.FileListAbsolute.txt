@@ -268,6 +268,7 @@ C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisit
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\talentacquisition_jobplacement_mvc.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\talentacquisition_jobplacement_mvc.RazorAssemblyInfo.cache
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\talentacquisition_jobplacement_mvc.RazorAssemblyInfo.cs
+C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\talentacquisition_jobplacement_mvc.sourcelink.json
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\mdraiyanalam\Desktop\Organize\iTransition\Course Project\talentacquisition_jobplacement_mvc\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json

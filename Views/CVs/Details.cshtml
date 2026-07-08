@@ -1,0 +1,40 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.CV
+
+@{
+    ViewData["Title"] = "CV Details";
+    var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+<h1>CV for @Model.Position?.Title</h1>
+<p><strong>Candidate:</strong> @Model.User?.FullName</p>
+<p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</p>
+
+<hr />
+
+<h3>Filled Attributes</h3>
+
+@if (Model.Position?.PositionAttributes != null)
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
+            {
+                var attr = pa.AttributeDefinition;
+                <tr>
+                    <td><strong>@attr.Name</strong></td>
+                    <td>@(attrValues.GetValueOrDefault(attr.Id, "Not Provided"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="mt-4">
+    <a asp-action="Index" class="btn btn-secondary">Back to CV List</a>
+</div>

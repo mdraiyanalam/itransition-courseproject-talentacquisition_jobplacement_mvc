@@ -11,6 +11,55 @@ namespace talentacquisition_jobplacement_mvc.Data
         {
         }
 
-        // Add your DbSets here later (Positions, CVs, Attributes, etc.)
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; } = null!;
+        public DbSet<AttributeDefinition> AttributeDefinitions { get; set; } = null!;
+        public DbSet<Position> Positions { get; set; } = null!;
+        public DbSet<PositionAttribute> PositionAttributes { get; set; } = null!;
+        public DbSet<CandidateProfile> CandidateProfiles { get; set; } = null!;
+        public DbSet<CV> CVs { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Position Attributes
+            modelBuilder.Entity<PositionAttribute>()
+                .HasOne(pa => pa.Position)
+                .WithMany(p => p.PositionAttributes)
+                .HasForeignKey(pa => pa.PositionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PositionAttribute>()
+                .HasOne(pa => pa.AttributeDefinition)
+                .WithMany()
+                .HasForeignKey(pa => pa.AttributeDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Candidate Profile
+            modelBuilder.Entity<CandidateProfile>()
+                .HasOne(cp => cp.User)
+                .WithOne()
+                .HasForeignKey<CandidateProfile>(cp => cp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CV - Fix multiple cascade paths
+            modelBuilder.Entity<CV>()
+                .HasOne(cv => cv.Position)
+                .WithMany(p => p.CVs)
+                .HasForeignKey(cv => cv.PositionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CV>()
+                .HasOne(cv => cv.User)
+                .WithMany()
+                .HasForeignKey(cv => cv.UserId)
+                .OnDelete(DeleteBehavior.Restrict);     // Changed to Restrict
+
+            modelBuilder.Entity<CV>()
+                .HasOne(cv => cv.CandidateProfile)
+                .WithMany(cp => cp.CVs)
+                .HasForeignKey(cv => cv.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Restrict);     // Changed to Restrict
+        }
     }
 }

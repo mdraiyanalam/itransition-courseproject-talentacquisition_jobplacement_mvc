@@ -1,0 +1,22 @@
+﻿namespace talentacquisition_jobplacement_mvc.Models
+{
+    public class CV
+    {
+        public int Id { get; set; }
+
+        public int PositionId { get; set; }
+        public Position Position { get; set; } = null!;
+
+        public string UserId { get; set; } = string.Empty;
+        public ApplicationUser User { get; set; } = null!;
+
+        public int CandidateProfileId { get; set; }
+        public CandidateProfile CandidateProfile { get; set; } = null!;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+
+        // Stores filled attribute values (JSON for flexibility)
+        public string AttributeValues { get; set; } = "{}";   // JSON string
+    }
+}

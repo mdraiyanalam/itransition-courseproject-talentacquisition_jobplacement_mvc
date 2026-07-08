@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("talentacquisition_jobplacement_mvc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b87d722678ce846fc3ea117f76b49592674bc433")]
 [assembly: System.Reflection.AssemblyProductAttribute("talentacquisition_jobplacement_mvc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("talentacquisition_jobplacement_mvc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,16 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.AttributeDefinition
+
+@{
+    ViewData["Title"] = "Delete Attribute";
+}
+
+<h3>Are you sure you want to delete this attribute?</h3>
+<div class="alert alert-danger">
+    <strong>@Model.Name</strong> (@Model.Type)
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

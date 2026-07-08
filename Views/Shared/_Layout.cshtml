@@ -20,28 +20,53 @@
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <!-- Left Menu -->
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-white" asp-controller="Positions" asp-action="Index">Positions</a>
                         </li>
+
+                        @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Attributes" asp-action="Index">Attributes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="CVs" asp-action="Index">All CVs</a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Admin" asp-action="Users">Manage Users</a>
+                            </li>
+                        }
                     </ul>
 
-                    <!-- Right side - Auth links -->
+                    <!-- Right side -->
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown"
+                                   role="button" data-bs-toggle="dropdown">
                                     Hello, @User.Identity?.Name!
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
                                         <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a>
                                     </li>
+                                    @if (User.IsInRole("Candidate"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Profiles" asp-action="Index">My Profile</a>
+                                        </li>
+                                    }
                                     <li>
                                         <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
                                             <button type="submit" class="dropdown-item">Logout</button>

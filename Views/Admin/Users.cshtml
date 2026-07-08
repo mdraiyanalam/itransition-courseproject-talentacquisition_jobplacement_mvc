@@ -1,0 +1,34 @@
+﻿@model List<talentacquisition_jobplacement_mvc.Controllers.UserRoleViewModel>
+
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h1>User Management</h1>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Roles</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.User.Email</td>
+                <td>@item.User.FullName</td>
+                <td>
+                    @string.Join(", ", item.Roles)
+                </td>
+                <td>
+                    <a asp-action="EditRoles" asp-route-id="@item.User.Id"
+                       class="btn btn-sm btn-primary">Edit Roles</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

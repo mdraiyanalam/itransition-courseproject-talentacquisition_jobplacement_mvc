@@ -188,12 +188,68 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Admin/EditRoles.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cRWRpdFJvbGVzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Admin/Users.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXNlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Attributes/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXR0cmlidXRlc1xDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Attributes/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXR0cmlidXRlc1xEZWxldGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Attributes/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXR0cmlidXRlc1xFZGl0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Attributes/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXR0cmlidXRlc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/CVs/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ1ZzXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/CVs/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ1ZzXERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/CVs/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ1ZzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Positions/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUG9zaXRpb25zXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Positions/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUG9zaXRpb25zXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Positions/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUG9zaXRpb25zXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Profiles/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZmlsZXNcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Profiles/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZmlsZXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/mdraiyanalam/Desktop/Organize/iTransition/Course Project/talentacquisition_jobplacement_mvc/Views/Shared/Error.cshtml]

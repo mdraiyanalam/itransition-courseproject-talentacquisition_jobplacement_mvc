@@ -1,0 +1,31 @@
+﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.CV>
+
+@{
+    ViewData["Title"] = "Submitted CVs";
+}
+
+<h1>Submitted CVs</h1>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Candidate</th>
+            <th>Position</th>
+            <th>Applied Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cv in Model)
+        {
+            <tr>
+                <td>@cv.User?.FullName</td>
+                <td>@cv.Position?.Title</td>
+                <td>@cv.CreatedAt.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-info">View CV</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

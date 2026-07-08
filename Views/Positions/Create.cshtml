@@ -1,0 +1,43 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.Position
+
+@{
+    ViewData["Title"] = "Create New Position";
+    var allAttributes = ViewBag.Attributes as List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>;
+}
+
+<h1>Create New Position</h1>
+
+<form asp-action="Create" method="post">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <label class="form-label">Position Title</label>
+                <input asp-for="Title" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <h5>Select Attributes</h5>
+            @if (allAttributes != null)
+            {
+                @foreach (var attr in allAttributes)
+                {
+                    <div class="form-check">
+                        <input type="checkbox" name="selectedAttributes" value="@attr.Id" class="form-check-input" />
+                        <label class="form-check-label">@attr.Name <small class="text-muted">(@attr.Type)</small></label>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Create Position</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
