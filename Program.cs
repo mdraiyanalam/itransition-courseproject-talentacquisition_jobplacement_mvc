@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
+using talentacquisition_jobplacement_mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +29,13 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 
 // Add MVC services
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<CVGeneratorService>();
+
 
 var app = builder.Build();
+
+// QuestPDF License (Evaluation mode for development)
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
 // Seeding Data
 using (var scope = app.Services.CreateScope())

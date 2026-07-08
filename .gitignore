@@ -1,0 +1,13 @@
+.vs/
+*.user
+*.suo
+*.sdf
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.rsuser
+*.log
+runtimes/
+LatoFont/

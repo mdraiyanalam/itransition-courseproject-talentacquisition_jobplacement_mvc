@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [Authorize(Roles = "Candidate,Recruiter,Administrator")]   // Candidates can view + Apply
+    [Authorize] // All authenticated users can view positions
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,7 +17,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context = context;
         }
 
-        // GET: Positions (All users can see)
+        // GET: Positions (Candidates + Recruiters + Admins)
         public async Task<IActionResult> Index()
         {
             var positions = await _context.Positions
@@ -25,10 +26,27 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
+            // Profile Completion Check for Candidates
+            if (User.IsInRole("Candidate"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var profile = await _context.CandidateProfiles
+                    .Include(cp => cp.User)
+                    .FirstOrDefaultAsync(cp => cp.UserId == userId);
+
+                if (profile == null ||
+                    string.IsNullOrWhiteSpace(profile.User?.FullName) ||
+                    string.IsNullOrWhiteSpace(profile.Summary))
+                {
+                    ViewBag.ProfileIncomplete = true;
+                    ViewBag.ProfileMessage = "Please complete your Full Name and Professional Summary before applying to any position.";
+                }
+            }
+
             return View(positions);
         }
 
-        // GET: Positions/Create (Only Recruiter + Admin)
+        // GET: Positions/Create (Recruiter + Admin only)
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Create()
         {
@@ -66,7 +84,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // GET: Positions/Edit/5 (Only Recruiter + Admin)
+        // GET: Positions/Edit/5 (Recruiter + Admin only)
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -106,10 +124,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     existing.Description = position.Description;
                     existing.UpdatedAt = DateTime.UtcNow;
 
-                    // Clear old attributes
                     _context.PositionAttributes.RemoveRange(existing.PositionAttributes);
 
-                    // Add new ones
                     if (selectedAttributes != null && selectedAttributes.Length > 0)
                     {
                         for (int i = 0; i < selectedAttributes.Length; i++)
