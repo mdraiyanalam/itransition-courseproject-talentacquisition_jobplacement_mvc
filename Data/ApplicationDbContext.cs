@@ -17,6 +17,7 @@ namespace talentacquisition_jobplacement_mvc.Data
         public DbSet<PositionAttribute> PositionAttributes { get; set; } = null!;
         public DbSet<CandidateProfile> CandidateProfiles { get; set; } = null!;
         public DbSet<CV> CVs { get; set; } = null!;
+        public DbSet<Project> Projects { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,7 +43,7 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasForeignKey<CandidateProfile>(cp => cp.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // CV - Fix multiple cascade paths
+            // CV
             modelBuilder.Entity<CV>()
                 .HasOne(cv => cv.Position)
                 .WithMany(p => p.CVs)
@@ -53,13 +54,19 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasOne(cv => cv.User)
                 .WithMany()
                 .HasForeignKey(cv => cv.UserId)
-                .OnDelete(DeleteBehavior.Restrict);     // Changed to Restrict
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<CV>()
                 .HasOne(cv => cv.CandidateProfile)
                 .WithMany(cp => cp.CVs)
                 .HasForeignKey(cv => cv.CandidateProfileId)
-                .OnDelete(DeleteBehavior.Restrict);     // Changed to Restrict
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.CandidateProfile)
+                .WithMany(cp => cp.Projects)
+                .HasForeignKey(p => p.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

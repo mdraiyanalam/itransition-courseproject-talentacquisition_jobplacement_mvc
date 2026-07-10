@@ -13,10 +13,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <!-- JavaScript Popup -->
     <script>
         window.onload = function() {
-            if (confirm("⚠️ Your profile is incomplete!\n\nPlease complete Full Name and Professional Summary before applying.\n\nGo to Profile now?")) {
+            if (confirm("⚠️ Your profile is incomplete!\n\nPlease complete your Full Name and Professional Summary before applying.\n\nGo to Profile now?")) {
                 window.location.href = "/Profiles";
             }
         };
@@ -52,10 +51,18 @@
                 <td>
                     @if (isRecruiterOrAdmin)
                     {
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@item.Id">✏️ Edit</a></li>
+                                <li><a class="dropdown-item" asp-action="Duplicate" asp-route-id="@item.Id">📋 Duplicate</a></li>
+                            </ul>
+                        </div>
                     }
                     <a asp-controller="CVs" asp-action="Create" asp-route-positionId="@item.Id"
-                       class="btn btn-sm btn-success">Apply</a>
+                       class="btn btn-sm btn-success ms-2">Apply</a>
                 </td>
             </tr>
         }

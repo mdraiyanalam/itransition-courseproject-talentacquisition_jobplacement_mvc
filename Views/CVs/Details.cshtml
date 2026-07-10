@@ -5,45 +5,53 @@
     var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
-<h1>CV for @Model.Position?.Title</h1>
-<p><strong>Candidate:</strong> @Model.User?.FullName</p>
-<p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</p>
+<h1>CV Details</h1>
 
-<hr />
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h3>@Model.Position?.Title</h3>
+                <p><strong>Candidate:</strong> @Model.User?.FullName</p>
+                <p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-success btn-lg">
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<h3>Filled Attributes</h3>
-
-@if (Model.Position?.PositionAttributes != null)
-{
-    <table class="table table-bordered">
-        <thead>
+<h4>Filled Information</h4>
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Attribute</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pa in Model.Position?.PositionAttributes.OrderBy(x => x.Order) ?? Enumerable.Empty<PositionAttribute>())
+        {
+            var attr = pa.AttributeDefinition;
+            var value = attrValues.GetValueOrDefault(attr.Id, "Not Provided");
             <tr>
-                <th>Attribute</th>
-                <th>Value</th>
+                <td><strong>@attr.Name</strong></td>
+                <td>@value</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
-            {
-                var attr = pa.AttributeDefinition;
-                <tr>
-                    <td><strong>@attr.Name</strong></td>
-                    <td>@(attrValues.GetValueOrDefault(attr.Id, "Not Provided"))</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+        }
+    </tbody>
+</table>
 
 <div class="mt-4">
-    <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-success">Download PDF</a>
-
     @if (User.IsInRole("Candidate"))
     {
-        <a asp-action="MyApplications" class="btn btn-secondary">Back to My Applications</a>
+        <a asp-action="MyApplications" class="btn btn-secondary">← Back to My Applications</a>
     }
     else
     {
-        <a asp-action="Index" class="btn btn-secondary">Back to CV List</a>
+        <a asp-action="Index" class="btn btn-secondary">← Back to All CVs</a>
     }
 </div>

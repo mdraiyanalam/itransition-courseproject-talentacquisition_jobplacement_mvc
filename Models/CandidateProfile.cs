@@ -12,5 +12,7 @@
         public string? Education { get; set; }
 
         public ICollection<CV> CVs { get; set; } = new List<CV>();
+
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
     }
 }

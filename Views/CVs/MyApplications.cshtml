@@ -8,30 +8,38 @@
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
-        @Html.Raw(TempData["Success"])
-    </div>
+    <div class="alert alert-success">@Html.Raw(TempData["Success"])</div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Position</th>
-            <th>Applied</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cv in Model)
-        {
+@if (Model.Any())
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
             <tr>
-                <td>@cv.Position.Title</td>
-                <td>@cv.CreatedAt.ToShortDateString()</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-info">View</a>
-                    <a asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">Download PDF</a>
-                </td>
+                <th>Position</th>
+                <th>Applied Date</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var cv in Model)
+            {
+                <tr>
+                    <td><strong>@cv.Position?.Title</strong></td>
+                    <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-info">View</a>
+                        <a asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">Download PDF</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        You haven't applied to any positions yet.
+        <a asp-controller="Positions" asp-action="Index" class="alert-link">Browse Positions →</a>
+    </div>
+}

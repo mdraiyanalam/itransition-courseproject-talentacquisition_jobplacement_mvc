@@ -84,7 +84,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // GET: Positions/Edit/5 (Recruiter + Admin only)
+        // GET: Positions/Edit/5
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -151,6 +151,42 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             ViewBag.SelectedAttributeIds = selectedAttributes?.ToList() ?? new List<int>();
 
             return View(position);
+        }
+
+        // NEW: Duplicate Position
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> Duplicate(int id)
+        {
+            var position = await _context.Positions
+                .Include(p => p.PositionAttributes)
+                .ThenInclude(pa => pa.AttributeDefinition)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (position == null) return NotFound();
+
+            var newPosition = new Position
+            {
+                Title = position.Title + " (Copy)",
+                Description = position.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            foreach (var pa in position.PositionAttributes)
+            {
+                newPosition.PositionAttributes.Add(new PositionAttribute
+                {
+                    AttributeDefinitionId = pa.AttributeDefinitionId,
+                    Order = pa.Order
+                });
+            }
+
+            _context.Positions.Add(newPosition);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"✅ Position '<b>{position.Title}</b>' duplicated successfully as '<b>{newPosition.Title}</b>'!";
+
+            return RedirectToAction(nameof(Index));
         }
 
         private bool PositionExists(int id)

@@ -66,17 +66,28 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a>
+                                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                                            <i class="bi bi-gear"></i> Account Settings
+                                        </a>
                                     </li>
                                     @if (User.IsInRole("Candidate"))
                                     {
                                         <li>
-                                            <a class="dropdown-item" asp-controller="Profiles" asp-action="Index">My Profile</a>
+                                            <a class="dropdown-item" asp-controller="Profiles" asp-action="Index">
+                                                <i class="bi bi-person-circle"></i> My Professional Profile
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Profiles" asp-action="Projects">
+                                                <i class="bi bi-briefcase"></i> My Projects
+                                            </a>
                                         </li>
                                     }
                                     <li>
                                         <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
-                                            <button type="submit" class="dropdown-item">Logout</button>
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right"></i> Logout
+                                            </button>
                                         </form>
                                     </li>
                                 </ul>
