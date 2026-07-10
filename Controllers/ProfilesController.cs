@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Evaluation;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
@@ -11,16 +12,18 @@ namespace talentacquisition_jobplacement_mvc.Controllers
     public class ProfilesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProfilesController(ApplicationDbContext context)
+        public ProfilesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
+        // GET: Main Profile
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var profile = await _context.CandidateProfiles
                 .Include(cp => cp.User)
                 .FirstOrDefaultAsync(cp => cp.UserId == userId);
@@ -35,20 +38,38 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(profile);
         }
 
+        // POST: Update Profile + Photo
         [HttpPost]
-        public async Task<IActionResult> Index(CandidateProfile model)
+        public async Task<IActionResult> Index(CandidateProfile model, IFormFile? profilePhoto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var user = await _context.Users.FindAsync(userId);
-            if (user != null && model.User != null)
+
+            if (user == null) return NotFound();
+
+            // Handle Profile Photo Upload
+            if (profilePhoto != null && profilePhoto.Length > 0)
             {
-                user.FullName = model.User.FullName;
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "profile-photos");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + profilePhoto.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await profilePhoto.CopyToAsync(fileStream);
+                }
+
+                user.ProfilePhotoUrl = "/uploads/profile-photos/" + uniqueFileName;
             }
 
-            var profile = await _context.CandidateProfiles
-                .FirstOrDefaultAsync(cp => cp.UserId == userId);
+            // Update Full Name
+            if (model.User != null)
+                user.FullName = model.User.FullName;
 
+            // Update or create profile
+            var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(cp => cp.UserId == userId);
             if (profile == null)
             {
                 profile = new CandidateProfile { UserId = userId };
@@ -61,9 +82,14 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Message"] = "Profile updated successfully! You can now apply to positions.";
-
+            TempData["Success"] = "Profile updated successfully!";
             return RedirectToAction(nameof(Index));
         }
+
+        // === Other existing actions (keep them) ===
+        public async Task<IActionResult> Attributes() { /* your existing code */ return View(); }
+        public async Task<IActionResult> Projects() { /* your existing code */ return View(); }
+        public async Task<IActionResult> SaveProject(Project project) { /* your existing code */ return RedirectToAction(nameof(Projects)); }
+        public async Task<IActionResult> DeleteProject(int id) { /* your existing code */ return RedirectToAction(nameof(Projects)); }
     }
 }

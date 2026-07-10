@@ -7,20 +7,54 @@
 
 <h3>@ViewData["Title"]</h3>
 <partial name="_StatusMessage" for="StatusMessage" />
+
 <div class="row">
-    <div class="col-md-6">
-        <form id="profile-form" method="post">
+    <div class="col-md-4 text-center mb-4">
+        @if (!string.IsNullOrEmpty(Model.ProfilePhotoUrl))
+        {
+            <img src="@Model.ProfilePhotoUrl" alt="Profile Photo"
+                 class="img-thumbnail rounded-circle mb-3"
+                 style="width:180px; height:180px; object-fit:cover;" />
+        }
+        else
+        {
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3"
+                 style="width:180px; height:180px;">
+                <i class="bi bi-person-fill" style="font-size: 5rem; color: #ccc;"></i>
+            </div>
+        }
+        <label class="btn btn-outline-primary">
+            Change Photo
+            <input type="file" name="profilePhoto" accept="image/*" style="display:none;" />
+        </label>
+    </div>
+
+    <div class="col-md-8">
+        <form id="profile-form" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
             <div class="form-floating mb-3">
-                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
+                <input asp-for="Input.FullName" class="form-control" placeholder="Full Name" />
+                <label asp-for="Input.FullName" class="form-label"></label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Username" class="form-control" disabled />
                 <label asp-for="Username" class="form-label"></label>
             </div>
+
             <div class="form-floating mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number."/>
+                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Phone number" />
                 <label asp-for="Input.PhoneNumber" class="form-label"></label>
                 <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
             </div>
-            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+
+            <div class="form-floating mb-3">
+                <textarea asp-for="Input.Summary" class="form-control" rows="4" placeholder="Professional Summary"></textarea>
+                <label asp-for="Input.Summary" class="form-label"></label>
+            </div>
+
+            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save Changes</button>
         </form>
     </div>
 </div>

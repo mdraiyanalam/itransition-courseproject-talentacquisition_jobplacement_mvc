@@ -1,14 +1,40 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CandidateProfile
-
 @{
     ViewData["Title"] = "My Professional Profile";
 }
 
 <h1>My Professional Profile</h1>
 
-<form asp-action="Index" method="post">
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<form asp-action="Index" method="post" enctype="multipart/form-data">
     <div class="row">
-        <div class="col-md-8">
+        <!-- Profile Photo -->
+        <div class="col-md-3 text-center mb-4">
+            @if (!string.IsNullOrEmpty(Model.User?.ProfilePhotoUrl))
+            {
+                <img src="@Model.User.ProfilePhotoUrl" alt="Profile Photo"
+                     class="img-thumbnail rounded-circle mb-3"
+                     style="width:180px; height:180px; object-fit:cover;" />
+            }
+            else
+            {
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width:180px; height:180px;">
+                    <i class="bi bi-person-fill" style="font-size: 5rem; color: #ccc;"></i>
+                </div>
+            }
+            <label class="btn btn-outline-primary">
+                Upload Photo
+                <input type="file" name="profilePhoto" accept="image/*" style="display:none;" />
+            </label>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="col-md-9">
             <div class="mb-3">
                 <label class="form-label">Full Name <span class="text-danger">*</span></label>
                 <input asp-for="User.FullName" class="form-control" required />
@@ -32,7 +58,7 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Save Profile</button>
+    <button type="submit" class="btn btn-primary btn-lg">Save Profile</button>
 </form>
 
 <hr />

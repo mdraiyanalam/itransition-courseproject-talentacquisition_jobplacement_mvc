@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
@@ -14,7 +14,7 @@ var connectionString = builder.Configuration.GetConnectionString("talentacquisit
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Add Identity with custom ApplicationUser and Roles
+// Add Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -27,14 +27,33 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Add MVC services
+// ==================== Google Authentication ====================
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
+
+    Console.WriteLine("✅ Google Authentication enabled.");
+}
+else
+{
+    Console.WriteLine("⚠️  Google Authentication is disabled (ClientId/Secret not found in configuration).");
+}
+
+// MVC Services
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<CVGeneratorService>();
 
-
 var app = builder.Build();
 
-// QuestPDF License (Evaluation mode for development)
+// QuestPDF License
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
 // Seeding Data
@@ -52,7 +71,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -62,6 +80,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

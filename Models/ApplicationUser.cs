@@ -11,7 +11,5 @@ namespace talentacquisition_jobplacement_mvc.Models
         public string? ProfilePhotoUrl { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Add more properties later as needed (Bio, Location, etc.)
     }
 }
