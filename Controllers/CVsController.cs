@@ -104,10 +104,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // GET: All CVs with Search (Recruiter/Admin)
         [Authorize(Roles = "Recruiter,Administrator")]
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string attributeFilter)
         {
             var cvs = _context.CVs
                 .Include(cv => cv.Position)
+                .ThenInclude(p => p.PositionAttributes)
+                .ThenInclude(pa => pa.AttributeDefinition)
                 .Include(cv => cv.User)
                 .OrderByDescending(cv => cv.CreatedAt)
                 .AsQueryable();
@@ -116,13 +118,21 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             {
                 searchString = searchString.ToLower();
                 cvs = cvs.Where(cv =>
-                    cv.User.FullName.ToLower().Contains(searchString) ||
-                    cv.Position.Title.ToLower().Contains(searchString) ||
+                    (cv.User.FullName != null && cv.User.FullName.ToLower().Contains(searchString)) ||
+                    (cv.Position.Title != null && cv.Position.Title.ToLower().Contains(searchString)) ||
                     (cv.User.Email != null && cv.User.Email.ToLower().Contains(searchString))
                 );
             }
 
+            // Basic attribute value search
+            if (!string.IsNullOrEmpty(attributeFilter))
+            {
+                cvs = cvs.Where(cv => cv.AttributeValues.Contains(attributeFilter));
+            }
+
             ViewBag.SearchString = searchString;
+            ViewBag.AttributeFilter = attributeFilter;
+
             return View(await cvs.ToListAsync());
         }
 

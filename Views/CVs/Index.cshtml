@@ -7,14 +7,18 @@
 <h1>All CV Applications</h1>
 
 <form asp-action="Index" method="get" class="mb-4">
-    <div class="input-group" style="max-width: 600px;">
-        <input type="text" name="searchString" class="form-control"
-               placeholder="Search candidate or position..." value="@ViewBag.SearchString" />
-        <button type="submit" class="btn btn-primary">Search</button>
-        @if (!string.IsNullOrEmpty(ViewBag.SearchString))
-        {
-            <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
-        }
+    <div class="row">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" name="searchString" class="form-control"
+                       placeholder="Search candidate or position..." value="@ViewBag.SearchString" />
+                <button type="submit" class="btn btn-primary">Search</button>
+                @if (!string.IsNullOrEmpty(ViewBag.SearchString))
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+                }
+            </div>
+        </div>
     </div>
 </form>
 
@@ -47,5 +51,5 @@
 }
 else
 {
-    <div class="alert alert-info">No applications yet.</div>
+    <div class="alert alert-info">No applications found.</div>
 }
