@@ -18,6 +18,9 @@ namespace talentacquisition_jobplacement_mvc.Data
         public DbSet<CandidateProfile> CandidateProfiles { get; set; } = null!;
         public DbSet<CV> CVs { get; set; } = null!;
         public DbSet<Project> Projects { get; set; } = null!;
+        public DbSet<Comment> Comments { get; set; } = null!;
+        public DbSet<CVLike> CVLikes { get; set; } = null!;
+        public DbSet<CandidateProfileAttribute> CandidateProfileAttributes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,11 +65,40 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasForeignKey(cv => cv.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Projects
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.CandidateProfile)
                 .WithMany(cp => cp.Projects)
                 .HasForeignKey(p => p.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // NEW: Comments
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.CV)
+                .WithMany(cv => cv.Comments)
+                .HasForeignKey(c => c.CVId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // In OnModelCreating:
+            modelBuilder.Entity<CVLike>()
+                .HasOne(l => l.CV)
+                .WithMany(cv => cv.Likes)
+                .HasForeignKey(l => l.CVId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<CandidateProfileAttribute>()
+                .HasOne(cpa => cpa.CandidateProfile)
+                .WithMany(cp => cp.ProfileAttributes)
+                .HasForeignKey(cpa => cpa.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CandidateProfileAttribute>()
+                .HasOne(cpa => cpa.AttributeDefinition)
+                .WithMany()
+                .HasForeignKey(cpa => cpa.AttributeDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

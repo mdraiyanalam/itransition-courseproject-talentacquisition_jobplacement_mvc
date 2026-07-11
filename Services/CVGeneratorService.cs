@@ -10,61 +10,101 @@ namespace talentacquisition_jobplacement_mvc.Services
     {
         public byte[] GenerateCV(CV cv)
         {
-            var attributeValues = string.IsNullOrEmpty(cv.AttributeValues)
-                ? new Dictionary<int, string>()
-                : JsonSerializer.Deserialize<Dictionary<int, string>>(cv.AttributeValues);
+            // Set license (Evaluation mode for development)
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
-            var document = Document.Create(container =>
+            var attrValues = string.IsNullOrEmpty(cv.AttributeValues)
+                ? new Dictionary<int, string>()
+                : JsonSerializer.Deserialize<Dictionary<int, string>>(cv.AttributeValues) ?? new Dictionary<int, string>();
+
+            return Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
-                    page.DefaultTextStyle(x => x.FontSize(11));
+                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
 
-                    page.Header().Text("Curriculum Vitae").FontSize(24).Bold().AlignCenter();
+                    // Header
+                    page.Header().Text("Curriculum Vitae")
+                        .FontSize(24)
+                        .Bold()
+                        .AlignCenter()
+                        .FontColor(Colors.Blue.Darken2);
 
                     page.Content().Column(column =>
                     {
-                        // Personal Info
-                        column.Item().Text(cv.User.FullName).FontSize(20).Bold();
-                        column.Item().Text(cv.User.Email).FontSize(12);
+                        // Personal Information
+                        column.Item().Text(cv.User?.FullName ?? "Candidate Name")
+                            .FontSize(20)
+                            .Bold();
+
+                        column.Item().Text(cv.User?.Email ?? "")
+                            .FontSize(12);
+
+                        column.Item().Text($"Applied on: {cv.CreatedAt:dd MMMM yyyy}")
+                            .FontSize(11)
+                            .FontColor(Colors.Grey.Darken2);
+
+                        column.Item().PaddingTop(20);
 
                         // Position Applied
-                        column.Item().PaddingTop(20).Text($"Position: {cv.Position.Title}").FontSize(16).Bold();
+                        column.Item().Text("Position Applied For")
+                            .FontSize(14)
+                            .Bold();
 
-                        // Attributes
-                        column.Item().PaddingTop(15).Text("Key Information").FontSize(14).Bold();
+                        column.Item().Text(cv.Position?.Title ?? "N/A")
+                            .FontSize(13);
 
-                        foreach (var pa in cv.Position.PositionAttributes.OrderBy(x => x.Order))
+                        column.Item().PaddingTop(15);
+
+                        // Attributes Section
+                        column.Item().Text("Qualifications & Answers")
+                            .FontSize(14)
+                            .Bold();
+
+                        column.Item().LineHorizontal(1);
+
+                        foreach (var pa in cv.Position?.PositionAttributes.OrderBy(x => x.Order)
+                                 ?? Enumerable.Empty<PositionAttribute>())
                         {
                             var attr = pa.AttributeDefinition;
-                            var value = attributeValues.GetValueOrDefault(attr.Id, "Not Provided");
+                            var value = attrValues.GetValueOrDefault(attr.Id, "Not Provided");
 
-                            column.Item().PaddingTop(5).Row(row =>
+                            column.Item().PaddingTop(8).Row(row =>
                             {
-                                row.RelativeItem().Text(attr.Name + ":").Bold();
-                                row.RelativeItem().Text(value);
+                                row.RelativeItem(3).Text(attr.Name + ":").Bold();
+                                row.RelativeItem(7).Text(value);
                             });
                         }
 
-                        // Summary
-                        if (!string.IsNullOrEmpty(cv.CandidateProfile?.Summary))
+                        // Professional Summary (if available)
+                        if (cv.CandidateProfile != null && !string.IsNullOrEmpty(cv.CandidateProfile.Summary))
                         {
-                            column.Item().PaddingTop(20).Text("Professional Summary").FontSize(14).Bold();
-                            column.Item().Text(cv.CandidateProfile.Summary);
+                            column.Item().PaddingTop(25).Text("Professional Summary")
+                                .FontSize(14)
+                                .Bold();
+
+                            column.Item().Text(cv.CandidateProfile.Summary)
+                                .FontSize(11);
                         }
+
+                        column.Item().PaddingTop(40).Text("Generated by TalentHub - Talent Acquisition System")
+                            .FontSize(10)
+                            .Italic()
+                            .AlignRight();
                     });
 
+                    // Footer
                     page.Footer().AlignCenter().Text(text =>
                     {
-                        text.Span("Generated on ").FontSize(10);
-                        text.Span(DateTime.UtcNow.ToString("dd MMM yyyy")).FontSize(10);
+                        text.Span("Page ");
+                        text.CurrentPageNumber();
+                        text.Span(" of ");
+                        text.TotalPages();
                     });
                 });
-            });
-
-            return document.GeneratePdf();
+            }).GeneratePdf();
         }
     }
 }

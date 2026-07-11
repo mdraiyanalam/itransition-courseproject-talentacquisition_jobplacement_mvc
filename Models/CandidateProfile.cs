@@ -14,5 +14,6 @@
         public ICollection<CV> CVs { get; set; } = new List<CV>();
 
         public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<CandidateProfileAttribute> ProfileAttributes { get; set; } = new List<CandidateProfileAttribute>();
     }
 }

@@ -1,0 +1,56 @@
+﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.CV>
+@{
+    ViewData["Title"] = "Platform Statistics";
+}
+
+<h1 class="mb-4">Platform Statistics</h1>
+
+<div class="row mb-5">
+    <div class="col-md-4">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h2>@ViewBag.TotalCVs</h2>
+                <p>Total CVs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h2>@ViewBag.TotalPositions</h2>
+                <p>Active Positions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h2>@ViewBag.TotalCandidates</h2>
+                <p>Registered Candidates</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4>Recent CV Submissions</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Candidate</th>
+            <th>Position</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cv in Model)
+        {
+            <tr>
+                <td>@cv.User?.FullName</td>
+                <td>@cv.Position?.Title</td>
+                <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-primary">Back to Home</a>

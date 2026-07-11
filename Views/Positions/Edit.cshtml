@@ -1,5 +1,4 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.Position
-
 @{
     ViewData["Title"] = "Edit Position";
     var allAttributes = ViewBag.Attributes as List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>;
@@ -8,7 +7,7 @@
 
 <h1>Edit Position</h1>
 
-<form asp-action="Edit">
+<form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
 
     <div class="row">
@@ -38,6 +37,21 @@
                     </div>
                 }
             }
+        </div>
+    </div>
+
+    <!-- Access Rules -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">Who can apply to this position?</label>
+        <div class="form-check">
+            <input type="checkbox" name="AllowedRoles" value="Candidate" class="form-check-input"
+                   checked="@(Model.AllowedRoles?.Contains("Candidate") == true)" />
+            <label class="form-check-label">Candidates</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" name="AllowedRoles" value="Recruiter" class="form-check-input"
+                   checked="@(Model.AllowedRoles?.Contains("Recruiter") == true)" />
+            <label class="form-check-label">Recruiters</label>
         </div>
     </div>
 

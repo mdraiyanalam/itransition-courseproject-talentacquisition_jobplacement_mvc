@@ -1,18 +1,17 @@
 ﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.CV>
 
 @{
-    ViewData["Title"] = "All Submitted CVs";
-    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    ViewData["Title"] = "All Applications";
 }
 
-<h1>All Submitted CVs</h1>
+<h1>All CV Applications</h1>
 
 <form asp-action="Index" method="get" class="mb-4">
-    <div class="input-group" style="max-width: 650px;">
-        <input type="text" name="search" value="@searchTerm"
-               class="form-control" placeholder="Search by candidate or position..." />
+    <div class="input-group" style="max-width: 600px;">
+        <input type="text" name="searchString" class="form-control"
+               placeholder="Search candidate or position..." value="@ViewBag.SearchString" />
         <button type="submit" class="btn btn-primary">Search</button>
-        @if (!string.IsNullOrEmpty(searchTerm))
+        @if (!string.IsNullOrEmpty(ViewBag.SearchString))
         {
             <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
         }
@@ -34,18 +33,11 @@
             @foreach (var cv in Model)
             {
                 <tr>
-                    <td>
-                        @if (!string.IsNullOrEmpty(cv.User?.ProfilePhotoUrl))
-                        {
-                            <img src="@cv.User.ProfilePhotoUrl" alt="" class="rounded-circle me-2"
-                                 style="width:48px;height:48px;object-fit:cover;" />
-                        }
-                        <strong>@cv.User?.FullName</strong>
-                    </td>
+                    <td>@cv.User?.FullName</td>
                     <td>@cv.Position?.Title</td>
                     <td>@cv.CreatedAt.ToString("dd MMM yyyy")</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-info">View</a>
+                        <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-primary">View</a>
                         <a asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">PDF</a>
                     </td>
                 </tr>
@@ -55,5 +47,5 @@
 }
 else
 {
-    <div class="alert alert-info">No CVs found.</div>
+    <div class="alert alert-info">No applications yet.</div>
 }

@@ -1,4 +1,5 @@
-﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.Project>
+﻿@using talentacquisition_jobplacement_mvc.Helpers
+@model IEnumerable<talentacquisition_jobplacement_mvc.Models.Project>
 
 @{
     ViewData["Title"] = "My Projects";
@@ -49,6 +50,7 @@
                 <th>Project</th>
                 <th>Period</th>
                 <th>Technologies</th>
+                <th>Description</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -59,7 +61,9 @@
                     <td><strong>@p.Name</strong></td>
                     <td>@p.StartDate.ToShortDateString() — @(p.EndDate?.ToShortDateString() ?? "Present")</td>
                     <td>@p.TechnologyTags</td>
+                    <td>@Html.Raw(MarkdownHelper.ToHtml(p.Description))</td>
                     <td>
+                        <a asp-action="EditProject" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Edit</a>
                         <form asp-action="DeleteProject" method="post" style="display:inline;">
                             <input type="hidden" name="id" value="@p.Id" />
                             <button type="submit" class="btn btn-sm btn-danger"

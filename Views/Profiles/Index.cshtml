@@ -1,40 +1,33 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CandidateProfile
-
 @{
     ViewData["Title"] = "My Professional Profile";
+    var allAttributes = ViewBag.AllAttributes as List<AttributeDefinition> ?? new List<AttributeDefinition>();
 }
 
-<h1>My Professional Profile</h1>
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+<h1 class="mb-4">My Professional Profile</h1>
 
 <form asp-action="Index" method="post" enctype="multipart/form-data">
     <div class="row">
-        <!-- Profile Photo -->
+        <!-- Photo -->
         <div class="col-md-3 text-center mb-4">
             @if (!string.IsNullOrEmpty(Model.User?.ProfilePhotoUrl))
             {
-                <img src="@Model.User.ProfilePhotoUrl" alt="Profile Photo"
-                     class="img-thumbnail rounded-circle mb-3"
-                     style="width:180px; height:180px; object-fit:cover;" />
+                <img src="@Model.User.ProfilePhotoUrl" class="rounded-circle mb-3 shadow"
+                     style="width:180px;height:180px;object-fit:cover;" />
             }
             else
             {
                 <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3"
-                     style="width:180px; height:180px;">
-                    <i class="bi bi-person-fill" style="font-size: 5rem; color: #ccc;"></i>
+                     style="width:180px;height:180px;">
+                    <i class="bi bi-person-fill" style="font-size:5.5rem;color:#ddd;"></i>
                 </div>
             }
-            <label class="btn btn-outline-primary">
-                Upload New Photo
+            <label class="btn btn-outline-primary w-100">
+                Change Photo
                 <input type="file" name="profilePhoto" accept="image/*" style="display:none;" />
             </label>
         </div>
 
-        <!-- Profile Form -->
         <div class="col-md-9">
             <div class="mb-3">
                 <label class="form-label">Full Name <span class="text-danger">*</span></label>
@@ -43,7 +36,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Professional Summary</label>
-                <textarea asp-for="Summary" class="form-control" rows="5"></textarea>
+                <textarea asp-for="Summary" class="form-control" rows="4" placeholder="Write a short professional summary..."></textarea>
             </div>
 
             <div class="mb-3">
@@ -58,19 +51,79 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-lg">Save Profile</button>
+    <hr />
+
+    <h4>Additional Attributes (Info Section)</h4>
+    <div class="row mb-4">
+        @foreach (var attr in allAttributes)
+        {
+            var profileAttr = Model.ProfileAttributes?.FirstOrDefault(pa => pa.AttributeDefinitionId == attr.Id);
+            bool isChecked = profileAttr != null;
+            string currentValue = profileAttr?.Value ?? "";
+
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="form-check mb-2">
+                    <input type="checkbox"
+                           name="selectedAttributeIds"
+                           value="@attr.Id"
+                           class="form-check-input"
+                           id="attr_@attr.Id"
+                           @(isChecked ? "checked" : "") />
+                    <label class="form-check-label" for="attr_@attr.Id">
+                        <strong>@attr.Name</strong>
+                        <small class="text-muted">(@attr.Type)</small>
+                    </label>
+                </div>
+
+                <!-- Input field shown for all attributes (easier UX) -->
+                <div class="ms-4">
+                    @switch (attr.Type?.ToLower())
+                    {
+                        case "dropdown":
+                            <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
+                                <option value="">-- Select --</option>
+                                @foreach (var option in (attr.Options ?? "").Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
+                                {
+                                    <option value="@option" selected="@(currentValue == option)">@option</option>
+                                }
+                            </select>
+                            break;
+
+                        case "number":
+                            <input type="number"
+                                   name="attributeValues[@attr.Id]"
+                                   class="form-control form-control-sm"
+                                   value="@currentValue"
+                                   placeholder="Enter number" />
+                            break;
+
+                        case "boolean":
+                            <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
+                                <option value="">-- Select --</option>
+                                <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
+                                <option value="No" selected="@(currentValue == "No")">No</option>
+                            </select>
+                            break;
+
+                        default: // Text
+                                 <input type="text"
+                                        name="attributeValues[@attr.Id]"
+                                        class="form-control form-control-sm"
+                                        value="@currentValue"
+                                        placeholder="Enter value..." />
+                            break;
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-success btn-lg px-5">
+        <i class="bi bi-save"></i> Save Profile
+    </button>
 </form>
 
-<hr />
+<hr class="my-5" />
 
 <h3>My Projects</h3>
-<a asp-action="Projects" class="btn btn-primary mb-3">
-    <i class="bi bi-briefcase"></i> Manage My Projects →
-</a>
-
-<hr />
-
-<h3>Apply to Positions</h3>
-<a asp-controller="Positions" asp-action="Index" class="btn btn-outline-primary btn-lg">
-    Browse Available Positions →
-</a>
+<a asp-action="Projects" class="btn btn-primary">Manage Projects →</a>

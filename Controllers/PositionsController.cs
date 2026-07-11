@@ -7,7 +7,7 @@ using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [Authorize] // All authenticated users can view positions
+    [AllowAnonymous]
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -17,16 +17,25 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context = context;
         }
 
-        // GET: Positions (Candidates + Recruiters + Admins)
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            var positions = await _context.Positions
+            var positions = _context.Positions
                 .Include(p => p.PositionAttributes)
                 .ThenInclude(pa => pa.AttributeDefinition)
                 .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+                .AsQueryable();
 
-            // Profile Completion Check for Candidates
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                positions = positions.Where(p =>
+                    p.Title.ToLower().Contains(searchString) ||
+                    (p.Description != null && p.Description.ToLower().Contains(searchString))
+                );
+            }
+
+            ViewBag.SearchString = searchString;
+
             if (User.IsInRole("Candidate"))
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -34,19 +43,18 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     .Include(cp => cp.User)
                     .FirstOrDefaultAsync(cp => cp.UserId == userId);
 
-                if (profile == null ||
-                    string.IsNullOrWhiteSpace(profile.User?.FullName) ||
+                if (profile == null || string.IsNullOrWhiteSpace(profile.User?.FullName) ||
                     string.IsNullOrWhiteSpace(profile.Summary))
                 {
                     ViewBag.ProfileIncomplete = true;
-                    ViewBag.ProfileMessage = "Please complete your Full Name and Professional Summary before applying to any position.";
+                    ViewBag.ProfileMessage = "Please complete your Full Name and Professional Summary before applying.";
                 }
             }
 
-            return View(positions);
+            return View(await positions.ToListAsync());
         }
 
-        // GET: Positions/Create (Recruiter + Admin only)
+        // GET: Positions/Create
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Create()
         {
@@ -62,6 +70,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         {
             if (ModelState.IsValid)
             {
+                position.AllowedRoles = Request.Form["AllowedRoles"].ToString() ?? "Candidate";
+
                 _context.Add(position);
 
                 if (selectedAttributes != null)
@@ -123,6 +133,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     existing.Title = position.Title;
                     existing.Description = position.Description;
                     existing.UpdatedAt = DateTime.UtcNow;
+                    existing.AllowedRoles = Request.Form["AllowedRoles"].ToString() ?? "Candidate";
 
                     _context.PositionAttributes.RemoveRange(existing.PositionAttributes);
 
@@ -153,13 +164,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // NEW: Duplicate Position
+        // Duplicate Position
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Duplicate(int id)
         {
             var position = await _context.Positions
                 .Include(p => p.PositionAttributes)
-                .ThenInclude(pa => pa.AttributeDefinition)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (position == null) return NotFound();
@@ -169,7 +179,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 Title = position.Title + " (Copy)",
                 Description = position.Description,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                AllowedRoles = position.AllowedRoles
             };
 
             foreach (var pa in position.PositionAttributes)
@@ -184,14 +195,40 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context.Positions.Add(newPosition);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"✅ Position '<b>{position.Title}</b>' duplicated successfully as '<b>{newPosition.Title}</b>'!";
-
+            TempData["Success"] = $"✅ Position '<b>{position.Title}</b>' duplicated successfully!";
             return RedirectToAction(nameof(Index));
         }
 
-        private bool PositionExists(int id)
+        // GET: Positions/Delete/5
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> Delete(int? id)
         {
-            return _context.Positions.Any(e => e.Id == id);
+            if (id == null) return NotFound();
+
+            var position = await _context.Positions
+                .Include(p => p.PositionAttributes)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (position == null) return NotFound();
+
+            return View(position);
+        }
+
+        // POST: Positions/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var position = await _context.Positions.FindAsync(id);
+            if (position != null)
+            {
+                _context.Positions.Remove(position);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Position '{position.Title}' deleted successfully.";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

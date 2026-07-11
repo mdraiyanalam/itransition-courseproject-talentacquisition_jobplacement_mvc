@@ -1,57 +1,89 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
-
+@using System.Security.Claims
 @{
-    ViewData["Title"] = "CV Details";
+    ViewData["Title"] = "CV Details - " + Model.Position?.Title;
     var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    bool canComment = User.Identity?.IsAuthenticated == true;
 }
 
-<h1>CV Details</h1>
+<h1>CV for <strong>@Model.Position?.Title</strong></h1>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-8">
-                <h3>@Model.Position?.Title</h3>
-                <p><strong>Candidate:</strong> @Model.User?.FullName</p>
-                <p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")</p>
-            </div>
-            <div class="col-md-4 text-end">
-                <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-success btn-lg">
-                    <i class="bi bi-download"></i> Download PDF
-                </a>
+<div class="row">
+    <div class="col-md-8">
+        <!-- Candidate Info -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4>@Model.User?.FullName</h4>
+                <p><strong>Email:</strong> @Model.User?.Email</p>
+                <p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</p>
             </div>
         </div>
+
+        <!-- Attribute Answers -->
+        <h5>Attribute Answers</h5>
+        <table class="table table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>Attribute</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pa in Model.Position?.PositionAttributes.OrderBy(x => x.Order) ?? Enumerable.Empty<PositionAttribute>())
+                {
+                    var attr = pa.AttributeDefinition;
+                    <tr>
+                        <td><strong>@attr.Name</strong></td>
+                        <td>@(attrValues.GetValueOrDefault(attr.Id, "<em class='text-muted'>Not provided</em>"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary w-100 mb-3">
+            <i class="bi bi-download"></i> Download PDF
+        </a>
     </div>
 </div>
 
-<h4>Filled Information</h4>
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Attribute</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var pa in Model.Position?.PositionAttributes.OrderBy(x => x.Order) ?? Enumerable.Empty<PositionAttribute>())
-        {
-            var attr = pa.AttributeDefinition;
-            var value = attrValues.GetValueOrDefault(attr.Id, "Not Provided");
-            <tr>
-                <td><strong>@attr.Name</strong></td>
-                <td>@value</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<hr />
 
-<div class="mt-4">
-    @if (User.IsInRole("Candidate"))
-    {
-        <a asp-action="MyApplications" class="btn btn-secondary">← Back to My Applications</a>
-    }
-    else
-    {
-        <a asp-action="Index" class="btn btn-secondary">← Back to All CVs</a>
-    }
-</div>
+<!-- Comments Section -->
+<h5>Comments (@Model.Comments.Count)</h5>
+
+@if (canComment)
+{
+    <form asp-action="AddComment" method="post" class="mb-4">
+        <input type="hidden" name="cvId" value="@Model.Id" />
+        <div class="input-group">
+            <input type="text" name="message" class="form-control" placeholder="Write a comment..." required />
+            <button type="submit" class="btn btn-outline-primary">Send</button>
+        </div>
+    </form>
+}
+
+@if (Model.Comments.Any())
+{
+    <div class="list-group">
+        @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+        {
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">@comment.User?.FullName</h6>
+                    <small>@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+                </div>
+                <p class="mb-1">@comment.Message</p>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">No comments yet. Be the first to comment!</p>
+}
+
+<a asp-action="MyApplications" class="btn btn-secondary mt-4">← Back to My Applications</a>

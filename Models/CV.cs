@@ -15,8 +15,8 @@
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        // Stores filled attribute values (JSON for flexibility)
-        public string AttributeValues { get; set; } = "{}";   // JSON string
+        public string AttributeValues { get; set; } = "{}";
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+        public ICollection<CVLike> Likes { get; set; } = new List<CVLike>();
     }
 }

@@ -1,5 +1,4 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.Position
-
 @{
     ViewData["Title"] = "Create New Position";
     var allAttributes = ViewBag.Attributes as List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>;
@@ -14,7 +13,6 @@
                 <label class="form-label">Position Title</label>
                 <input asp-for="Title" class="form-control" required />
             </div>
-
             <div class="mb-3">
                 <label class="form-label">Description</label>
                 <textarea asp-for="Description" class="form-control" rows="5"></textarea>
@@ -33,6 +31,19 @@
                     </div>
                 }
             }
+        </div>
+    </div>
+
+    <!-- Access Rules -->
+    <div class="mb-3">
+        <label class="form-label">Who can apply to this position?</label>
+        <div class="form-check">
+            <input type="checkbox" name="AllowedRoles" value="Candidate" class="form-check-input" checked />
+            <label class="form-check-label">Candidates</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" name="AllowedRoles" value="Recruiter" class="form-check-input" />
+            <label class="form-check-label">Recruiters</label>
         </div>
     </div>
 
