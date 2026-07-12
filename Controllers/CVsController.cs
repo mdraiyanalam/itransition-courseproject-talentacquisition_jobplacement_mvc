@@ -170,25 +170,71 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(cv);
         }
 
-        // POST: Edit CV
+        // POST: Edit CV + Enhanced Profile Sync
         [HttpPost]
         [Authorize(Roles = "Candidate,Administrator")]
         public async Task<IActionResult> Edit(int id, CV cv, Dictionary<int, string> attributeValues)
         {
-            var existing = await _context.CVs.FindAsync(id);
+            var existing = await _context.CVs
+                .Include(c => c.CandidateProfile)
+                    .ThenInclude(cp => cp.ProfileAttributes)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (existing == null) return NotFound();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (existing.UserId != userId && !User.IsInRole("Administrator"))
                 return Forbid();
 
-            existing.AttributeValues = JsonSerializer.Serialize(attributeValues);
+            // Update CV values
+            existing.AttributeValues = JsonSerializer.Serialize(attributeValues ?? new Dictionary<int, string>());
             existing.UpdatedAt = DateTime.UtcNow;
+
+            if (existing.CandidateProfile != null && attributeValues?.Any() == true)
+            {
+                await SyncCVAttributesToProfile(existing.CandidateProfile, attributeValues);
+            }
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "CV updated successfully!";
+            TempData["Success"] = "CV updated successfully! Profile attributes synced.";
             return RedirectToAction("Details", new { id });
+        }
+
+        private async Task SyncCVAttributesToProfile(CandidateProfile profile, Dictionary<int, string> attributeValues)
+        {
+            if (profile == null || attributeValues == null) return;
+
+            // Load existing profile attributes (already included via ThenInclude)
+            var existingProfileAttrs = profile.ProfileAttributes.ToList();
+
+            foreach (var kvp in attributeValues)
+            {
+                int attrId = kvp.Key;
+                string value = kvp.Value?.Trim() ?? "";
+
+                var profileAttr = existingProfileAttrs
+                    .FirstOrDefault(pa => pa.AttributeDefinitionId == attrId);
+
+                if (profileAttr != null)
+                {
+                    // Update existing
+                    profileAttr.Value = value;
+                }
+                else
+                {
+                    // Create new
+                    profile.ProfileAttributes.Add(new CandidateProfileAttribute
+                    {
+                        CandidateProfileId = profile.Id,
+                        AttributeDefinitionId = attrId,
+                        Value = value
+                    });
+                }
+            }
+
+            // Optional: Remove profile attributes that are no longer in this CV (if you want strict sync)
+            // For now we keep them (profile can have more attributes than a single CV)
         }
 
         // GET: Download PDF
@@ -233,6 +279,109 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
+            return RedirectToAction("Details", new { id = cvId });
+        }
+
+        // POST: Publish CV (Only if complete)
+        [HttpPost]
+        [Authorize(Roles = "Candidate,Administrator")]
+        public async Task<IActionResult> Publish(int id)
+        {
+            var cv = await _context.CVs
+                .Include(cv => cv.Position)
+                    .ThenInclude(p => p.PositionAttributes)
+                .Include(cv => cv.CandidateProfile)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (cv == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (cv.UserId != userId && !User.IsInRole("Administrator"))
+                return Forbid();
+
+            // Check if all required attributes are filled
+            bool isComplete = IsCVComplete(cv);
+
+            if (!isComplete)
+            {
+                TempData["Message"] = "Cannot publish: Please fill all required fields first.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            cv.IsPublished = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "CV published successfully! It is now visible to Recruiters.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        private bool IsCVComplete(CV cv)
+        {
+            if (cv.Position == null) return false;
+
+            var attributeValues = string.IsNullOrEmpty(cv.AttributeValues)
+                ? new Dictionary<int, string>()
+                : JsonSerializer.Deserialize<Dictionary<int, string>>(cv.AttributeValues)
+                  ?? new Dictionary<int, string>();
+
+            foreach (var pa in cv.Position.PositionAttributes)
+            {
+                if (pa.AttributeDefinition.IsRequired)
+                {
+                    var value = attributeValues.GetValueOrDefault(pa.AttributeDefinitionId, "");
+                    if (string.IsNullOrWhiteSpace(value))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        // POST: Unpublish CV
+        [HttpPost]
+        [Authorize(Roles = "Candidate,Administrator")]
+        public async Task<IActionResult> Unpublish(int id)
+        {
+            var cv = await _context.CVs.FindAsync(id);
+            if (cv == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (cv.UserId != userId && !User.IsInRole("Administrator"))
+                return Forbid();
+
+            cv.IsPublished = false;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "CV unpublished.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        // POST: Like / Unlike CV
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> ToggleLike(int cvId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var cv = await _context.CVs.FindAsync(cvId);
+            if (cv == null) return NotFound();
+
+            var existingLike = await _context.CVLikes
+                .FirstOrDefaultAsync(l => l.CVId == cvId && l.UserId == userId);
+
+            if (existingLike != null)
+            {
+                _context.CVLikes.Remove(existingLike);
+            }
+            else
+            {
+                _context.CVLikes.Add(new CVLike
+                {
+                    CVId = cvId,
+                    UserId = userId
+                });
+            }
+
+            await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = cvId });
         }
     }

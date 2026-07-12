@@ -1,12 +1,141 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CandidateProfile
+@using talentacquisition_jobplacement_mvc.Helpers
 @{
     ViewData["Title"] = "My Professional Profile";
     var allAttributes = ViewBag.AllAttributes as List<AttributeDefinition> ?? new List<AttributeDefinition>();
+    bool isReadOnly = ViewBag.IsReadOnly == true;
 }
 
-<h1 class="mb-4">My Professional Profile</h1>
+<h1 class="mb-4">@(isReadOnly ? "Candidate Profile" : "My Professional Profile")</h1>
 
-<form asp-action="Index" method="post" enctype="multipart/form-data">
+@if (isReadOnly)
+{
+    <div class="alert alert-info">
+        <strong>Read-Only Mode</strong> — You are viewing <strong>@Model.User?.FullName</strong>'s profile as a Recruiter.
+    </div>
+}
+
+@if (!isReadOnly)
+{
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Photo -->
+            <div class="col-md-3 text-center mb-4">
+                @if (!string.IsNullOrEmpty(Model.User?.ProfilePhotoUrl))
+                {
+                    <img src="@Model.User.ProfilePhotoUrl" class="rounded-circle mb-3 shadow"
+                         style="width:180px;height:180px;object-fit:cover;" />
+                }
+                else
+                {
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width:180px;height:180px;">
+                        <i class="bi bi-person-fill" style="font-size:5.5rem;color:#ddd;"></i>
+                    </div>
+                }
+                <label class="btn btn-outline-primary w-100">
+                    Change Photo
+                    <input type="file" name="profilePhoto" accept="image/*" style="display:none;" />
+                </label>
+            </div>
+
+            <div class="col-md-9">
+                <div class="mb-3">
+                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input asp-for="User.FullName" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Professional Summary</label>
+                    <textarea asp-for="Summary" class="form-control" rows="4" placeholder="Write a short professional summary..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Experience</label>
+                    <textarea asp-for="Experience" class="form-control" rows="6"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Education</label>
+                    <textarea asp-for="Education" class="form-control" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <h4>Additional Attributes (Info Section)</h4>
+        <div class="row mb-4">
+            @foreach (var attr in allAttributes)
+            {
+                var profileAttr = Model.ProfileAttributes?.FirstOrDefault(pa => pa.AttributeDefinitionId == attr.Id);
+                bool isChecked = profileAttr != null;
+                string currentValue = profileAttr?.Value ?? "";
+
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="form-check mb-2">
+                        <input type="checkbox"
+                               name="selectedAttributeIds"
+                               value="@attr.Id"
+                               class="form-check-input"
+                               id="attr_@attr.Id"
+                               @(isChecked ? "checked" : "") />
+                        <label class="form-check-label" for="attr_@attr.Id">
+                            <strong>@attr.Name</strong>
+                            <small class="text-muted">(@attr.Type)</small>
+                        </label>
+                    </div>
+
+                    <div class="ms-4">
+                        @switch (attr.Type?.ToLower())
+                        {
+                            case "dropdown":
+                                <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option>
+                                    @foreach (var option in (attr.Options ?? "").Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
+                                    {
+                                        <option value="@option" selected="@(currentValue == option)">@option</option>
+                                    }
+                                </select>
+                                break;
+
+                            case "number":
+                                <input type="number"
+                                       name="attributeValues[@attr.Id]"
+                                       class="form-control form-control-sm"
+                                       value="@currentValue"
+                                       placeholder="Enter number" />
+                                break;
+
+                            case "boolean":
+                                <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option>
+                                    <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
+                                    <option value="No" selected="@(currentValue == "No")">No</option>
+                                </select>
+                                break;
+
+                            default: // Text
+                                     <input type="text"
+                                            name="attributeValues[@attr.Id]"
+                                            class="form-control form-control-sm"
+                                            value="@currentValue"
+                                            placeholder="Enter value..." />
+                                break;
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="bi bi-save"></i> Save Profile
+        </button>
+    </form>
+}
+else
+{
+    <!-- Read-Only View for Recruiters -->
     <div class="row">
         <!-- Photo -->
         <div class="col-md-3 text-center mb-4">
@@ -22,108 +151,66 @@
                     <i class="bi bi-person-fill" style="font-size:5.5rem;color:#ddd;"></i>
                 </div>
             }
-            <label class="btn btn-outline-primary w-100">
-                Change Photo
-                <input type="file" name="profilePhoto" accept="image/*" style="display:none;" />
-            </label>
         </div>
 
         <div class="col-md-9">
-            <div class="mb-3">
-                <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                <input asp-for="User.FullName" class="form-control" required />
-            </div>
+            <h3>@Model.User?.FullName</h3>
+            <p><strong>Email:</strong> @Model.User?.Email</p>
 
-            <div class="mb-3">
-                <label class="form-label">Professional Summary</label>
-                <textarea asp-for="Summary" class="form-control" rows="4" placeholder="Write a short professional summary..."></textarea>
-            </div>
+            <h5>Professional Summary</h5>
+            <p class="border p-3">@(Model.Summary ?? "No summary provided.")</p>
 
-            <div class="mb-3">
-                <label class="form-label">Experience</label>
-                <textarea asp-for="Experience" class="form-control" rows="6"></textarea>
-            </div>
+            <h5>Experience</h5>
+            <p class="border p-3">@(Model.Experience ?? "No experience provided.")</p>
 
-            <div class="mb-3">
-                <label class="form-label">Education</label>
-                <textarea asp-for="Education" class="form-control" rows="4"></textarea>
-            </div>
+            <h5>Education</h5>
+            <p class="border p-3">@(Model.Education ?? "No education provided.")</p>
         </div>
     </div>
 
     <hr />
 
-    <h4>Additional Attributes (Info Section)</h4>
+    <h4>Additional Attributes</h4>
     <div class="row mb-4">
         @foreach (var attr in allAttributes)
         {
             var profileAttr = Model.ProfileAttributes?.FirstOrDefault(pa => pa.AttributeDefinitionId == attr.Id);
-            bool isChecked = profileAttr != null;
-            string currentValue = profileAttr?.Value ?? "";
-
-            <div class="col-md-4 col-lg-3 mb-3">
-                <div class="form-check mb-2">
-                    <input type="checkbox"
-                           name="selectedAttributeIds"
-                           value="@attr.Id"
-                           class="form-check-input"
-                           id="attr_@attr.Id"
-                           @(isChecked ? "checked" : "") />
-                    <label class="form-check-label" for="attr_@attr.Id">
-                        <strong>@attr.Name</strong>
-                        <small class="text-muted">(@attr.Type)</small>
-                    </label>
-                </div>
-
-                <!-- Input field shown for all attributes (easier UX) -->
-                <div class="ms-4">
-                    @switch (attr.Type?.ToLower())
-                    {
-                        case "dropdown":
-                            <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
-                                <option value="">-- Select --</option>
-                                @foreach (var option in (attr.Options ?? "").Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
-                                {
-                                    <option value="@option" selected="@(currentValue == option)">@option</option>
-                                }
-                            </select>
-                            break;
-
-                        case "number":
-                            <input type="number"
-                                   name="attributeValues[@attr.Id]"
-                                   class="form-control form-control-sm"
-                                   value="@currentValue"
-                                   placeholder="Enter number" />
-                            break;
-
-                        case "boolean":
-                            <select name="attributeValues[@attr.Id]" class="form-select form-select-sm">
-                                <option value="">-- Select --</option>
-                                <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
-                                <option value="No" selected="@(currentValue == "No")">No</option>
-                            </select>
-                            break;
-
-                        default: // Text
-                                 <input type="text"
-                                        name="attributeValues[@attr.Id]"
-                                        class="form-control form-control-sm"
-                                        value="@currentValue"
-                                        placeholder="Enter value..." />
-                            break;
-                    }
-                </div>
+            <div class="col-md-4 mb-3">
+                <strong>@attr.Name</strong><br />
+                <small class="text-muted">@attr.Type</small><br />
+                <strong>@(profileAttr?.Value ?? "<span class='text-muted'>Not Provided</span>")</strong>
             </div>
         }
     </div>
 
-    <button type="submit" class="btn btn-success btn-lg px-5">
-        <i class="bi bi-save"></i> Save Profile
-    </button>
-</form>
+    <hr />
+
+    <h4>Projects</h4>
+    @if (Model.Projects.Any())
+    {
+        foreach (var project in Model.Projects)
+        {
+            <div class="border p-3 mb-3 rounded">
+                <h5>@project.Name</h5>
+                <small class="text-muted">@project.StartDate.ToShortDateString() — @(project.EndDate?.ToShortDateString() ?? "Present")</small>
+                <p>@Html.Raw(MarkdownHelper.ToHtml(project.Description))</p>
+                @if (!string.IsNullOrEmpty(project.TechnologyTags))
+                {
+                    <p><strong>Technologies:</strong> @project.TechnologyTags</p>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">No projects added yet.</p>
+    }
+}
 
 <hr class="my-5" />
 
-<h3>My Projects</h3>
-<a asp-action="Projects" class="btn btn-primary">Manage Projects →</a>
+@if (!isReadOnly)
+{
+    <h3>My Projects</h3>
+    <a asp-action="Projects" class="btn btn-primary">Manage Projects →</a>
+}

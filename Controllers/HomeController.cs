@@ -30,19 +30,24 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public async Task<IActionResult> Stats()
         {
             var totalCVs = await _context.CVs.CountAsync();
+            var publishedCVs = await _context.CVs.CountAsync(c => c.IsPublished);
             var totalPositions = await _context.Positions.CountAsync();
-            var totalCandidates = await _context.Users.CountAsync(); // Simplified
+            var totalCandidates = await _context.Users.CountAsync();
+            var totalRecruiters = await _context.UserRoles.CountAsync(ur => ur.RoleId ==
+                (await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Recruiter")).Id);
 
             var recentCVs = await _context.CVs
                 .Include(c => c.User)
                 .Include(c => c.Position)
                 .OrderByDescending(c => c.CreatedAt)
-                .Take(5)
+                .Take(8)
                 .ToListAsync();
 
             ViewBag.TotalCVs = totalCVs;
+            ViewBag.PublishedCVs = publishedCVs;
             ViewBag.TotalPositions = totalPositions;
             ViewBag.TotalCandidates = totalCandidates;
+            ViewBag.TotalRecruiters = totalRecruiters;
 
             return View(recentCVs);
         }

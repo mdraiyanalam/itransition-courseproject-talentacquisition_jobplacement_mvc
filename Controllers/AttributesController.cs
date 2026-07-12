@@ -40,10 +40,20 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             ViewBag.SearchString = searchString;
             ViewBag.CategoryFilter = categoryFilter;
+
             ViewBag.Categories = await _context.AttributeDefinitions
                 .Select(a => a.Category)
                 .Distinct()
                 .OrderBy(c => c)
+                .ToListAsync();
+
+            // Recently used attributes (used in any position)
+            ViewBag.RecentAttributes = await _context.PositionAttributes
+                .Include(pa => pa.AttributeDefinition)
+                .GroupBy(pa => pa.AttributeDefinition)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .Take(8)
                 .ToListAsync();
 
             return View(await attributes.ToListAsync());

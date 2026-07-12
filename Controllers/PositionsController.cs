@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Text.Json;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 
@@ -74,6 +73,9 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 position.CreatedAt = DateTime.UtcNow;
                 position.UpdatedAt = DateTime.UtcNow;
 
+                // Handle Access Rules
+                position.AccessRules = Request.Form["AccessRulesJson"].ToString() ?? "[]";
+
                 _context.Add(position);
 
                 if (selectedAttributes != null)
@@ -137,9 +139,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     existing.Level = position.Level;
                     existing.ProjectTags = position.ProjectTags;
                     existing.MaxProjects = position.MaxProjects;
-                    existing.AccessRules = position.AccessRules;
                     existing.UpdatedAt = DateTime.UtcNow;
 
+                    // Update Access Rules from form
+                    existing.AccessRules = Request.Form["AccessRulesJson"].ToString() ?? existing.AccessRules;
+
+                    // Update attributes
                     _context.PositionAttributes.RemoveRange(existing.PositionAttributes);
 
                     if (selectedAttributes != null && selectedAttributes.Length > 0)
@@ -206,11 +211,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             TempData["Success"] = $"Position duplicated successfully!";
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool PositionExists(int id)
-        {
-            return _context.Positions.Any(e => e.Id == id);
         }
     }
 }

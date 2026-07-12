@@ -4,6 +4,7 @@
     ViewData["Title"] = "CV Details - " + Model.Position?.Title;
     var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    bool isOwner = userId == Model.UserId;
     bool canComment = User.Identity?.IsAuthenticated == true;
 }
 
@@ -20,6 +21,38 @@
             </div>
         </div>
 
+        <!-- Like Button -->
+        <div class="mb-3">
+            <form asp-action="ToggleLike" method="post" style="display:inline;">
+                <input type="hidden" name="cvId" value="@Model.Id" />
+                <button type="submit" class="btn @(Model.Likes.Any(l => l.UserId == userId) ? "btn-danger" : "btn-outline-danger")">
+                    <i class="bi bi-heart-fill"></i>
+                    @Model.Likes.Count Like@(Model.Likes.Count != 1 ? "s" : "")
+                </button>
+            </form>
+        </div>
+
+        <!-- Publish Controls -->
+        @if (isOwner || User.IsInRole("Administrator"))
+        {
+            <div class="mb-3">
+                @if (Model.IsPublished)
+                {
+                    <form asp-action="Unpublish" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-warning">Unpublish</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="Publish" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">Publish CV</button>
+                    </form>
+                }
+            </div>
+        }
+
         <!-- Attribute Answers -->
         <h5>Attribute Answers</h5>
         <table class="table table-striped">
@@ -33,9 +66,19 @@
                 @foreach (var pa in Model.Position?.PositionAttributes.OrderBy(x => x.Order) ?? Enumerable.Empty<PositionAttribute>())
                 {
                     var attr = pa.AttributeDefinition;
+                    var value = attrValues.GetValueOrDefault(attr.Id, "");
                     <tr>
                         <td><strong>@attr.Name</strong></td>
-                        <td>@(attrValues.GetValueOrDefault(attr.Id, "<em class='text-muted'>Not provided</em>"))</td>
+                        <td>
+                            @if (string.IsNullOrEmpty(value))
+                            {
+                                <span class="text-danger">Empty (Required)</span>
+                            }
+                            else
+                            {
+                                @value
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

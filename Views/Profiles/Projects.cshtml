@@ -1,6 +1,5 @@
 ﻿@using talentacquisition_jobplacement_mvc.Helpers
 @model IEnumerable<talentacquisition_jobplacement_mvc.Models.Project>
-
 @{
     ViewData["Title"] = "My Projects";
 }
@@ -17,7 +16,7 @@
     <div class="card-body">
         <h5>Add New Project</h5>
         <form asp-action="SaveProject" method="post">
-            <div class="row">
+            <div class="row g-3">
                 <div class="col-md-5">
                     <input type="text" name="Name" class="form-control" placeholder="Project Name" required />
                 </div>
@@ -28,20 +27,20 @@
                     <input type="date" name="EndDate" class="form-control" />
                 </div>
                 <div class="col-md-1">
-                    <button type="submit" class="btn btn-success">Add</button>
+                    <button type="submit" class="btn btn-success w-100">Add</button>
                 </div>
             </div>
 
             <div class="mt-3">
-                <textarea name="Description" class="form-control" rows="3" placeholder="Project Description (Markdown supported)"></textarea>
-            </div>
-
-            <!-- Simple Tag Input -->
-            <div class="mt-3">
                 <label class="form-label">Technologies / Tags</label>
                 <input type="text" name="TechnologyTags" id="techTags"
                        class="form-control" placeholder="C#, ASP.NET, React, SQL, Azure..." />
-                <small class="text-muted">Type tags separated by commas</small>
+                <small class="text-muted">Type tags separated by commas (press Enter)</small>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Description (Markdown supported)</label>
+                <textarea name="Description" class="form-control" rows="4" placeholder="Project Description..."></textarea>
             </div>
         </form>
     </div>
@@ -66,7 +65,15 @@
                 <tr>
                     <td><strong>@p.Name</strong></td>
                     <td>@p.StartDate.ToShortDateString() — @(p.EndDate?.ToShortDateString() ?? "Present")</td>
-                    <td>@p.TechnologyTags</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(p.TechnologyTags))
+                        {
+                            foreach (var tag in p.TechnologyTags.Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrEmpty(t)))
+                            {
+                                <span class="badge bg-primary me-1">@tag</span>
+                            }
+                        }
+                    </td>
                     <td>@Html.Raw(MarkdownHelper.ToHtml(p.Description))</td>
                     <td>
                         <a asp-action="EditProject" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Edit</a>
@@ -92,17 +99,19 @@ else
 
 @section Scripts {
     <script>
-        // Simple tag input enhancement
         document.addEventListener("DOMContentLoaded", function () {
             const tagInput = document.getElementById('techTags');
 
             tagInput.addEventListener('keypress', function (e) {
-                if (e.key === ',') {
-                    // Optional: prevent default comma behavior if needed
+                if (e.key === ',' || e.key === 'Enter') {
+                    e.preventDefault();
+                    let value = this.value.trim();
+                    if (value) {
+                        this.value = ''; // Clear input after adding
+                    }
                 }
             });
 
-            // Optional: trim spaces on blur
             tagInput.addEventListener('blur', function () {
                 this.value = this.value.trim();
             });

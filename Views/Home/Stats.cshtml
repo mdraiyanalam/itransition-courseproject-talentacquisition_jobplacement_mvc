@@ -5,25 +5,33 @@
 
 <h1 class="mb-4">Platform Statistics</h1>
 
-<div class="row mb-5">
-    <div class="col-md-4">
-        <div class="card text-center bg-primary text-white">
+<div class="row mb-5 g-3">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white h-100">
             <div class="card-body">
                 <h2>@ViewBag.TotalCVs</h2>
                 <p>Total CVs</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center bg-success text-white">
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white h-100">
+            <div class="card-body">
+                <h2>@ViewBag.PublishedCVs</h2>
+                <p>Published CVs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white h-100">
             <div class="card-body">
                 <h2>@ViewBag.TotalPositions</h2>
                 <p>Active Positions</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center bg-info text-white">
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-dark h-100">
             <div class="card-body">
                 <h2>@ViewBag.TotalCandidates</h2>
                 <p>Registered Candidates</p>
@@ -32,13 +40,14 @@
     </div>
 </div>
 
-<h4>Recent CV Submissions</h4>
-<table class="table">
+<h4>Recent Applications</h4>
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Candidate</th>
             <th>Position</th>
-            <th>Date</th>
+            <th>Applied</th>
+            <th>Status</th>
         </tr>
     </thead>
     <tbody>
@@ -48,6 +57,16 @@
                 <td>@cv.User?.FullName</td>
                 <td>@cv.Position?.Title</td>
                 <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                <td>
+                    @if (cv.IsPublished)
+                    {
+                        <span class="badge bg-success">Published</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Draft</span>
+                    }
+                </td>
             </tr>
         }
     </tbody>

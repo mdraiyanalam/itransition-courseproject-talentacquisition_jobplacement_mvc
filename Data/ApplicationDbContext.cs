@@ -16,6 +16,7 @@ namespace talentacquisition_jobplacement_mvc.Data
         public DbSet<Position> Positions { get; set; } = null!;
         public DbSet<PositionAttribute> PositionAttributes { get; set; } = null!;
         public DbSet<CandidateProfile> CandidateProfiles { get; set; } = null!;
+        public DbSet<CandidateProfileAttribute> CandidateProfileAttributes { get; set; } = null!;
         public DbSet<CV> CVs { get; set; } = null!;
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<Comment> Comments { get; set; } = null!;

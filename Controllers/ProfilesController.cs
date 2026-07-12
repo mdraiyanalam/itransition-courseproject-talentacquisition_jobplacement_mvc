@@ -34,6 +34,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             var profile = await _context.CandidateProfiles
                 .Include(cp => cp.User)
+                .Include(cp => cp.ProfileAttributes)
                 .FirstOrDefaultAsync(cp => cp.UserId == userId);
 
             if (profile == null)
@@ -43,10 +44,16 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Load all attributes for the view
+            ViewBag.AllAttributes = await _context.AttributeDefinitions
+                .OrderBy(a => a.Category)
+                .ThenBy(a => a.Name)
+                .ToListAsync();
+
             return View(profile);
         }
 
-        // POST: Update Profile + Photo
+        // POST: Update Profile + Photo + Enhanced Attribute Sync
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(CandidateProfile model, IFormFile? profilePhoto)
@@ -84,7 +91,11 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 await _userManager.UpdateAsync(user);
             }
 
-            var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(cp => cp.UserId == userId);
+            // Get or create profile
+            var profile = await _context.CandidateProfiles
+                .Include(cp => cp.ProfileAttributes)
+                .FirstOrDefaultAsync(cp => cp.UserId == userId);
+
             if (profile == null)
             {
                 profile = new CandidateProfile { UserId = userId };
@@ -95,10 +106,68 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             profile.Experience = model.Experience;
             profile.Education = model.Education;
 
+            // === ENHANCED PROFILE ATTRIBUTE SYNC ===
+            await SyncProfileAttributes(profile);
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Profile updated successfully!";
+            TempData["Success"] = "Profile updated successfully! Attributes synced.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // Helper: Sync submitted attribute values from form to CandidateProfileAttribute
+        private async Task SyncProfileAttributes(CandidateProfile profile)
+        {
+            if (profile == null) return;
+
+            // Get selected attribute IDs
+            var selectedAttributeIds = Request.Form["selectedAttributeIds"]
+                .Select(id => int.TryParse(id, out int parsed) ? parsed : 0)
+                .Where(id => id > 0)
+                .ToList();
+
+            // Get attribute values from form
+            var attributeValues = new Dictionary<int, string>();
+            foreach (var key in Request.Form.Keys.Where(k => k.StartsWith("attributeValues[")))
+            {
+                if (int.TryParse(key.Replace("attributeValues[", "").Replace("]", ""), out int attrId))
+                {
+                    attributeValues[attrId] = Request.Form[key].ToString().Trim();
+                }
+            }
+
+            // Update or create profile attributes
+            foreach (var attrId in selectedAttributeIds)
+            {
+                string value = attributeValues.GetValueOrDefault(attrId, "");
+
+                var existingAttr = profile.ProfileAttributes
+                    .FirstOrDefault(pa => pa.AttributeDefinitionId == attrId);
+
+                if (existingAttr != null)
+                {
+                    existingAttr.Value = value;
+                }
+                else
+                {
+                    profile.ProfileAttributes.Add(new CandidateProfileAttribute
+                    {
+                        CandidateProfileId = profile.Id,
+                        AttributeDefinitionId = attrId,
+                        Value = value
+                    });
+                }
+            }
+
+            // Remove attributes that were unchecked
+            var attributesToRemove = profile.ProfileAttributes
+                .Where(pa => !selectedAttributeIds.Contains(pa.AttributeDefinitionId))
+                .ToList();
+
+            foreach (var toRemove in attributesToRemove)
+            {
+                _context.CandidateProfileAttributes.Remove(toRemove);
+            }
         }
 
         // === PROJECTS ===
@@ -137,6 +206,28 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Projects));
+        }
+
+        // GET: View Candidate Profile (Read-only for Recruiters/Admins)
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> ViewProfile(string userId)
+        {
+            var profile = await _context.CandidateProfiles
+                .Include(cp => cp.User)
+                .Include(cp => cp.ProfileAttributes)
+                    .ThenInclude(pa => pa.AttributeDefinition)
+                .Include(cp => cp.Projects)
+                .FirstOrDefaultAsync(cp => cp.UserId == userId);
+
+            if (profile == null) return NotFound();
+
+            ViewBag.IsReadOnly = true;
+            ViewBag.AllAttributes = await _context.AttributeDefinitions
+                .OrderBy(a => a.Category)
+                .ThenBy(a => a.Name)
+                .ToListAsync();
+
+            return View("Index", profile); // Reuse Index view with read-only mode
         }
     }
 }

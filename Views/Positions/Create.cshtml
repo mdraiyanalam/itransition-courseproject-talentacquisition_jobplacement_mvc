@@ -6,10 +6,9 @@
 
 <h1>Create New Position</h1>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" id="positionForm">
     <div class="row">
         <div class="col-md-8">
-            <!-- Basic Info -->
             <div class="mb-3">
                 <label asp-for="Title" class="form-label"></label>
                 <input asp-for="Title" class="form-control" required />
@@ -18,10 +17,9 @@
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control" rows="5"></textarea>
             </div>
-
             <div class="row">
                 <div class="col-md-6">
-                    <label asp-for="Company" class="form-label">Company / Department</label>
+                    <label asp-for="Company" class="form-label">Company</label>
                     <input asp-for="Company" class="form-control" />
                 </div>
                 <div class="col-md-6">
@@ -34,11 +32,6 @@
                         <option value="Lead">Lead</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="mb-3 mt-3">
-                <label class="form-label">Preferred Project Tags (comma separated)</label>
-                <input asp-for="ProjectTags" class="form-control" placeholder="React, .NET, Azure, SQL" />
             </div>
         </div>
 
@@ -57,29 +50,15 @@
         </div>
     </div>
 
-    <!-- Access Rules -->
+    <!-- Access Rules - Dynamic Builder -->
     <div class="card mt-4">
-        <div class="card-header">
-            <strong>Access Rules</strong>
+        <div class="card-header bg-primary text-white">
+            <strong>Access Rules (Killer Feature)</strong>
         </div>
         <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label fw-bold">Who can apply?</label>
-                <div class="form-check">
-                    <input type="checkbox" name="AllowedRoles" value="Candidate" class="form-check-input" checked />
-                    <label class="form-check-label">Candidates</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" name="AllowedRoles" value="Recruiter" class="form-check-input" />
-                    <label class="form-check-label">Recruiters (Internal)</label>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Advanced Rules (JSON)</label>
-                <textarea asp-for="AccessRules" class="form-control" rows="4"
-                          placeholder='{"MinExperience": 2, "RequiredEnglishLevel": "Intermediate"}'></textarea>
-            </div>
+            <div id="rulesContainer"></div>
+            <button type="button" class="btn btn-success btn-sm mt-3" onclick="addRule()">+ Add Access Rule</button>
+            <input type="hidden" name="AccessRulesJson" id="AccessRulesJson" />
         </div>
     </div>
 
@@ -88,3 +67,68 @@
         <a asp-action="Index" class="btn btn-secondary btn-lg">Cancel</a>
     </div>
 </form>
+
+@section Scripts {
+    <script>
+        let rules = []; // Start empty for Create
+
+        function addRule() {
+            const container = document.getElementById('rulesContainer');
+            const index = rules.length;
+
+            const ruleHtml = `
+                <div class="border p-3 mb-3 rounded bg-light" id="rule-${index}">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <select class="form-select" onchange="updateRule(${index})" id="attr-${index}">
+                                <option value="">Select Attribute</option>
+                                @foreach (var attr in allAttributes ?? new List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>())
+                                {
+                                        <option value="@attr.Id">@attr.Name (@attr.Type)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" onchange="updateRule(${index})" id="op-${index}">
+                                <option value="=">= Equal</option>
+                                <option value="!=">≠ Not Equal</option>
+                                <option value=">">&gt; Greater Than</option>
+                                <option value="<">&lt; Less Than</option>
+                                <option value=">=">≥ Greater or Equal</option>
+                                <option value="<=">≤ Less or Equal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="val-${index}"
+                                   placeholder="Value (e.g. Advanced, 7.5)" onchange="updateRule(${index})" />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRule(${index})">×</button>
+                        </div>
+                    </div>
+                </div>`;
+
+            container.innerHTML += ruleHtml;
+            rules.push({ AttributeDefinitionId: 0, Operator: "=", Value: "", Order: index });
+        }
+
+        function updateRule(index) {
+            rules[index] = {
+                AttributeDefinitionId: parseInt(document.getElementById(`attr-${index}`).value) || 0,
+                Operator: document.getElementById(`op-${index}`).value,
+                Value: document.getElementById(`val-${index}`).value.trim(),
+                Order: index
+            };
+        }
+
+        function removeRule(index) {
+            document.getElementById(`rule-${index}`).remove();
+            rules = rules.filter((_, i) => i !== index);
+        }
+
+        // Save rules before form submit
+        document.getElementById('positionForm').addEventListener('submit', function () {
+            document.getElementById('AccessRulesJson').value = JSON.stringify(rules);
+        });
+    </script>
+}

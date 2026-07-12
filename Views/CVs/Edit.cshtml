@@ -1,11 +1,10 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
-
 @{
     ViewData["Title"] = "Edit CV";
     var attributeValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
-<h1>Edit CV for @Model.Position?.Title</h1>
+<h1>Edit CV for <span class="text-primary">@Model.Position?.Title</span></h1>
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
@@ -35,17 +34,23 @@
                         break;
 
                     case "number":
-                        <input type="number" name="attributeValues[@attr.Id]" class="form-control" value="@currentValue" />
+                        <input type="number" name="attributeValues[@attr.Id]"
+                               class="form-control" value="@currentValue" />
                         break;
 
                     default:
-                        <textarea name="attributeValues[@attr.Id]" class="form-control" rows="3">@currentValue</textarea>
+
+                        <!-- Text / Textarea -->
+                        <textarea name="attributeValues[@attr.Id]"
+                  class="form-control" rows="3">@currentValue</textarea>
                         break;
                 }
             </div>
         }
     }
 
-    <button type="submit" class="btn btn-success">Save Changes</button>
-    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success btn-lg">Save Changes</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+    </div>
 </form>
