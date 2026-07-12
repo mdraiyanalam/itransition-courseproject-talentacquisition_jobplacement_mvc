@@ -11,7 +11,7 @@
 @if (isReadOnly)
 {
     <div class="alert alert-info">
-        <strong>Read-Only Mode</strong> — You are viewing <strong>@Model.User?.FullName</strong>'s profile as a Recruiter.
+        <strong>Read-Only Mode</strong> — Viewing <strong>@Model.User?.FullName</strong>'s profile
     </div>
 }
 
@@ -47,7 +47,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Professional Summary</label>
-                    <textarea asp-for="Summary" class="form-control" rows="4" placeholder="Write a short professional summary..."></textarea>
+                    <textarea asp-for="Summary" class="form-control" rows="4"></textarea>
                 </div>
 
                 <div class="mb-3">
@@ -64,7 +64,7 @@
 
         <hr />
 
-        <h4>Additional Attributes (Info Section)</h4>
+        <h4>Additional Attributes</h4>
         <div class="row mb-4">
             @foreach (var attr in allAttributes)
             {
@@ -74,15 +74,10 @@
 
                 <div class="col-md-4 col-lg-3 mb-3">
                     <div class="form-check mb-2">
-                        <input type="checkbox"
-                               name="selectedAttributeIds"
-                               value="@attr.Id"
-                               class="form-check-input"
-                               id="attr_@attr.Id"
-                               @(isChecked ? "checked" : "") />
+                        <input type="checkbox" name="selectedAttributeIds" value="@attr.Id"
+                               class="form-check-input" id="attr_@attr.Id" @(isChecked ? "checked" : "") />
                         <label class="form-check-label" for="attr_@attr.Id">
-                            <strong>@attr.Name</strong>
-                            <small class="text-muted">(@attr.Type)</small>
+                            <strong>@attr.Name</strong> <small class="text-muted">(@attr.Type)</small>
                         </label>
                     </div>
 
@@ -100,11 +95,8 @@
                                 break;
 
                             case "number":
-                                <input type="number"
-                                       name="attributeValues[@attr.Id]"
-                                       class="form-control form-control-sm"
-                                       value="@currentValue"
-                                       placeholder="Enter number" />
+                                <input type="number" name="attributeValues[@attr.Id]"
+                                       class="form-control form-control-sm" value="@currentValue" />
                                 break;
 
                             case "boolean":
@@ -115,12 +107,9 @@
                                 </select>
                                 break;
 
-                            default: // Text
-                                     <input type="text"
-                                            name="attributeValues[@attr.Id]"
-                                            class="form-control form-control-sm"
-                                            value="@currentValue"
-                                            placeholder="Enter value..." />
+                            default:
+                                <input type="text" name="attributeValues[@attr.Id]"
+                                       class="form-control form-control-sm" value="@currentValue" />
                                 break;
                         }
                     </div>
@@ -135,9 +124,8 @@
 }
 else
 {
-    <!-- Read-Only View for Recruiters -->
+    <!-- Read-Only View -->
     <div class="row">
-        <!-- Photo -->
         <div class="col-md-3 text-center mb-4">
             @if (!string.IsNullOrEmpty(Model.User?.ProfilePhotoUrl))
             {
@@ -152,7 +140,6 @@ else
                 </div>
             }
         </div>
-
         <div class="col-md-9">
             <h3>@Model.User?.FullName</h3>
             <p><strong>Email:</strong> @Model.User?.Email</p>
@@ -183,8 +170,6 @@ else
         }
     </div>
 
-    <hr />
-
     <h4>Projects</h4>
     @if (Model.Projects.Any())
     {
@@ -192,7 +177,7 @@ else
         {
             <div class="border p-3 mb-3 rounded">
                 <h5>@project.Name</h5>
-                <small class="text-muted">@project.StartDate.ToShortDateString() — @(project.EndDate?.ToShortDateString() ?? "Present")</small>
+                <small>@project.StartDate.ToShortDateString() — @(project.EndDate?.ToShortDateString() ?? "Present")</small>
                 <p>@Html.Raw(MarkdownHelper.ToHtml(project.Description))</p>
                 @if (!string.IsNullOrEmpty(project.TechnologyTags))
                 {
@@ -207,10 +192,9 @@ else
     }
 }
 
-<hr class="my-5" />
-
 @if (!isReadOnly)
 {
+    <hr class="my-5" />
     <h3>My Projects</h3>
     <a asp-action="Projects" class="btn btn-primary">Manage Projects →</a>
 }

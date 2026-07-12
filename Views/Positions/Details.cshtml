@@ -5,29 +5,48 @@
 
 <h4>Applications Received (@Model.CVs.Count)</h4>
 
-<table class="table table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Candidate</th>
-            <th>Applied On</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cv in Model.CVs.OrderByDescending(c => c.CreatedAt))
-        {
+@if (Model.CVs.Any())
+{
+    <table class="table table-striped">
+        <thead class="table-dark">
             <tr>
-                <td>@cv.User?.FullName</td>
-                <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
-                <td>
-                    <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id"
-                       class="btn btn-sm btn-primary">View CV</a>
-                    <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id"
-                       class="btn btn-sm btn-success">Download PDF</a>
-                </td>
+                <th>Candidate</th>
+                <th>Applied On</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var cv in Model.CVs.OrderByDescending(c => c.CreatedAt))
+            {
+                <tr>
+                    <td>@cv.User?.FullName</td>
+                    <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                    <td>
+                        @if (cv.IsPublished)
+                        {
+                            <span class="badge bg-success">Published</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-secondary">Draft</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id"
+                           class="btn btn-sm btn-primary">View CV</a>
+                        <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id"
+                           class="btn btn-sm btn-success">Download PDF</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">No applications yet.</div>
+}
 
 <a asp-action="Index" class="btn btn-secondary">← Back to Positions</a>

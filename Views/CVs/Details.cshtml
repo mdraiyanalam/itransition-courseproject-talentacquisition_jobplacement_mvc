@@ -1,41 +1,38 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
+@using talentacquisition_jobplacement_mvc.Helpers
 @using System.Security.Claims
 @{
-    ViewData["Title"] = "CV Details - " + Model.Position?.Title;
+    ViewData["Title"] = $"CV - {Model.Position?.Title}";
     var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     bool isOwner = userId == Model.UserId;
-    bool canComment = User.Identity?.IsAuthenticated == true;
+    bool canEdit = isOwner || User.IsInRole("Administrator");
 }
 
 <h1>CV for <strong>@Model.Position?.Title</strong></h1>
 
 <div class="row">
     <div class="col-md-8">
-        <!-- Candidate Info -->
         <div class="card mb-4">
             <div class="card-body">
-                <h4>@Model.User?.FullName</h4>
+                <h3>@Model.User?.FullName</h3>
                 <p><strong>Email:</strong> @Model.User?.Email</p>
-                <p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</p>
+                <p><strong>Applied:</strong> @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")</p>
             </div>
         </div>
 
-        <!-- Like Button -->
-        <div class="mb-3">
-            <form asp-action="ToggleLike" method="post" style="display:inline;">
-                <input type="hidden" name="cvId" value="@Model.Id" />
-                <button type="submit" class="btn @(Model.Likes.Any(l => l.UserId == userId) ? "btn-danger" : "btn-outline-danger")">
-                    <i class="bi bi-heart-fill"></i>
-                    @Model.Likes.Count Like@(Model.Likes.Count != 1 ? "s" : "")
-                </button>
-            </form>
-        </div>
+        <!-- Like -->
+        <form asp-action="ToggleLike" method="post" class="d-inline">
+            <input type="hidden" name="cvId" value="@Model.Id" />
+            <button type="submit" class="btn @(Model.Likes.Any(l => l.UserId == userId) ? "btn-danger" : "btn-outline-danger") mb-3">
+                ❤️ @Model.Likes.Count
+            </button>
+        </form>
 
         <!-- Publish Controls -->
-        @if (isOwner || User.IsInRole("Administrator"))
+        @if (canEdit)
         {
-            <div class="mb-3">
+            <div class="mb-4">
                 @if (Model.IsPublished)
                 {
                     <form asp-action="Unpublish" method="post" style="display:inline;">
@@ -53,7 +50,7 @@
             </div>
         }
 
-        <!-- Attribute Answers -->
+        <!-- Attributes -->
         <h5>Attribute Answers</h5>
         <table class="table table-striped">
             <thead class="table-light">
@@ -67,12 +64,14 @@
                 {
                     var attr = pa.AttributeDefinition;
                     var value = attrValues.GetValueOrDefault(attr.Id, "");
+                    bool isEmpty = string.IsNullOrWhiteSpace(value);
+
                     <tr>
-                        <td><strong>@attr.Name</strong></td>
+                        <td><strong>@attr.Name</strong> <small>(@attr.Type)</small></td>
                         <td>
-                            @if (string.IsNullOrEmpty(value))
+                            @if (isEmpty)
                             {
-                                <span class="text-danger">Empty (Required)</span>
+                                <span class="text-danger fw-bold">NOT PROVIDED</span>
                             }
                             else
                             {
@@ -83,6 +82,24 @@
                 }
             </tbody>
         </table>
+
+        <!-- Projects -->
+        @if (Model.CandidateProfile?.Projects.Any() == true)
+        {
+            <h5>Selected Projects</h5>
+            @foreach (var p in Model.CandidateProfile.Projects.Take(Model.Position?.MaxProjects ?? 5))
+            {
+                <div class="border p-3 mb-3 rounded">
+                    <h6>@p.Name</h6>
+                    <small class="text-muted">@p.StartDate.ToShortDateString() — @(p.EndDate?.ToShortDateString() ?? "Present")</small>
+                    <p>@Html.Raw(MarkdownHelper.ToHtml(p.Description))</p>
+                    @if (!string.IsNullOrEmpty(p.TechnologyTags))
+                    {
+                        <p><strong>Technologies:</strong> @p.TechnologyTags</p>
+                    }
+                </div>
+            }
+        }
     </div>
 
     <!-- Sidebar -->
@@ -90,21 +107,24 @@
         <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary w-100 mb-3">
             <i class="bi bi-download"></i> Download PDF
         </a>
+        @if (canEdit)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary w-100 mb-3">Edit CV</a>
+        }
     </div>
 </div>
 
 <hr />
 
-<!-- Comments Section -->
+<!-- Comments -->
 <h5>Comments (@Model.Comments.Count)</h5>
-
-@if (canComment)
+@if (User.Identity?.IsAuthenticated == true)
 {
     <form asp-action="AddComment" method="post" class="mb-4">
         <input type="hidden" name="cvId" value="@Model.Id" />
         <div class="input-group">
             <input type="text" name="message" class="form-control" placeholder="Write a comment..." required />
-            <button type="submit" class="btn btn-outline-primary">Send</button>
+            <button type="submit" class="btn btn-primary">Send</button>
         </div>
     </form>
 }
@@ -112,21 +132,18 @@
 @if (Model.Comments.Any())
 {
     <div class="list-group">
-        @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+        @foreach (var c in Model.Comments.OrderByDescending(x => x.CreatedAt))
         {
             <div class="list-group-item">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">@comment.User?.FullName</h6>
-                    <small>@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
-                </div>
-                <p class="mb-1">@comment.Message</p>
+                <strong>@c.User?.FullName</strong> <small class="text-muted">@c.CreatedAt.ToString("dd MMM HH:mm")</small>
+                <p class="mb-0">@c.Message</p>
             </div>
         }
     </div>
 }
 else
 {
-    <p class="text-muted">No comments yet. Be the first to comment!</p>
+    <p class="text-muted">No comments yet.</p>
 }
 
-<a asp-action="MyApplications" class="btn btn-secondary mt-4">← Back to My Applications</a>
+<a asp-action="MyApplications" class="btn btn-secondary mt-4">← Back</a>

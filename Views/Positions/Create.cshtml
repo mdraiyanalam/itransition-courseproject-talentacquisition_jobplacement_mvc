@@ -70,7 +70,7 @@
 
 @section Scripts {
     <script>
-        let rules = []; // Start empty for Create
+        let rules = @Html.Raw(Model.AccessRules ?? "[]");
 
         function addRule() {
             const container = document.getElementById('rulesContainer');
@@ -78,29 +78,29 @@
 
             const ruleHtml = `
                 <div class="border p-3 mb-3 rounded bg-light" id="rule-${index}">
-                    <div class="row">
+                    <div class="row g-2">
                         <div class="col-md-5">
-                            <select class="form-select" onchange="updateRule(${index})" id="attr-${index}">
+                            <select class="form-select" id="attr-${index}" onchange="updateRule(${index})">
                                 <option value="">Select Attribute</option>
-                                @foreach (var attr in allAttributes ?? new List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>())
+                                @foreach (var attr in allAttributes ?? new List<AttributeDefinition>())
                                 {
                                         <option value="@attr.Id">@attr.Name (@attr.Type)</option>
                                 }
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <select class="form-select" onchange="updateRule(${index})" id="op-${index}">
+                            <select class="form-select" id="op-${index}" onchange="updateRule(${index})">
                                 <option value="=">= Equal</option>
                                 <option value="!=">≠ Not Equal</option>
-                                <option value=">">&gt; Greater Than</option>
-                                <option value="<">&lt; Less Than</option>
+                                <option value=">">&gt; Greater</option>
+                                <option value="<">&lt; Less</option>
                                 <option value=">=">≥ Greater or Equal</option>
                                 <option value="<=">≤ Less or Equal</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <input type="text" class="form-control" id="val-${index}"
-                                   placeholder="Value (e.g. Advanced, 7.5)" onchange="updateRule(${index})" />
+                                   placeholder="Value" onchange="updateRule(${index})" />
                         </div>
                         <div class="col-md-1">
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeRule(${index})">×</button>
@@ -126,9 +126,25 @@
             rules = rules.filter((_, i) => i !== index);
         }
 
-        // Save rules before form submit
-        document.getElementById('positionForm').addEventListener('submit', function () {
-            document.getElementById('AccessRulesJson').value = JSON.stringify(rules);
+        // Save rules on form submit
+        document.getElementById('positionForm').addEventListener('submit', function() {
+            document.getElementById('AccessRulesJson').value = JSON.stringify(rules.filter(r => r.AttributeDefinitionId > 0));
         });
+
+        // Load existing rules when editing
+        window.onload = function() {
+            if (rules.length > 0) {
+                rules.forEach((rule, index) => {
+                    addRule();
+                    setTimeout(() => {
+                        if (document.getElementById(`attr-${index}`)) {
+                            document.getElementById(`attr-${index}`).value = rule.AttributeDefinitionId || "";
+                            document.getElementById(`op-${index}`).value = rule.Operator || "=";
+                            document.getElementById(`val-${index}`).value = rule.Value || "";
+                        }
+                    }, 100);
+                });
+            }
+        };
     </script>
 }

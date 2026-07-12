@@ -24,14 +24,14 @@ namespace talentacquisition_jobplacement_mvc.Helpers
             }
             catch
             {
-                return true; // Fail open on error
+                return false; // Fail closed on error for better security
             }
         }
 
         private static bool EvaluateSingleRule(AccessRule rule, CandidateProfile profile, Dictionary<int, string> submittedValues)
         {
             string? value = submittedValues.TryGetValue(rule.AttributeDefinitionId, out var submitted)
-                ? submitted
+                ? submitted?.Trim()
                 : GetProfileValue(profile, rule.AttributeDefinitionId);
 
             if (string.IsNullOrWhiteSpace(value))
@@ -39,20 +39,27 @@ namespace talentacquisition_jobplacement_mvc.Helpers
 
             return rule.Operator switch
             {
-                "=" => string.Equals(value, rule.Value, StringComparison.OrdinalIgnoreCase),
-                "!=" => !string.Equals(value, rule.Value, StringComparison.OrdinalIgnoreCase),
-                ">" => double.TryParse(value, out var v1) && double.TryParse(rule.Value, out var v2) && v1 > v2,
-                "<" => double.TryParse(value, out var v1) && double.TryParse(rule.Value, out var v2) && v1 < v2,
-                ">=" => double.TryParse(value, out var v1) && double.TryParse(rule.Value, out var v2) && v1 >= v2,
-                "<=" => double.TryParse(value, out var v1) && double.TryParse(rule.Value, out var v2) && v1 <= v2,
+                "=" => string.Equals(value, rule.Value?.Trim(), StringComparison.OrdinalIgnoreCase),
+                "!=" => !string.Equals(value, rule.Value?.Trim(), StringComparison.OrdinalIgnoreCase),
+                ">" => CompareNumbers(value, rule.Value, (a, b) => a > b),
+                "<" => CompareNumbers(value, rule.Value, (a, b) => a < b),
+                ">=" => CompareNumbers(value, rule.Value, (a, b) => a >= b),
+                "<=" => CompareNumbers(value, rule.Value, (a, b) => a <= b),
                 _ => true
             };
+        }
+
+        private static bool CompareNumbers(string val1, string? val2, Func<double, double, bool> comparer)
+        {
+            return double.TryParse(val1, out var v1) &&
+                   double.TryParse(val2, out var v2) &&
+                   comparer(v1, v2);
         }
 
         private static string? GetProfileValue(CandidateProfile profile, int attributeId)
         {
             var attr = profile.ProfileAttributes.FirstOrDefault(pa => pa.AttributeDefinitionId == attributeId);
-            return attr?.Value;
+            return attr?.Value?.Trim();
         }
     }
 }

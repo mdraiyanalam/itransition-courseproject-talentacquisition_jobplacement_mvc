@@ -35,7 +35,7 @@
                 <label class="form-label">Technologies / Tags</label>
                 <input type="text" name="TechnologyTags" id="techTags"
                        class="form-control" placeholder="C#, ASP.NET, React, SQL, Azure..." />
-                <small class="text-muted">Type tags separated by commas (press Enter)</small>
+                <small class="text-muted">Type tags separated by commas</small>
             </div>
 
             <div class="mt-3">
@@ -107,7 +107,7 @@ else
                     e.preventDefault();
                     let value = this.value.trim();
                     if (value) {
-                        this.value = ''; // Clear input after adding
+                        this.value = ''; // Clear after adding
                     }
                 }
             });

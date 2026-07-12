@@ -1,4 +1,5 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
+@using talentacquisition_jobplacement_mvc.Helpers
 @{
     ViewData["Title"] = "Edit CV";
     var attributeValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
@@ -6,51 +7,104 @@
 
 <h1>Edit CV for <span class="text-primary">@Model.Position?.Title</span></h1>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="PositionId" />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="PositionId" />
 
-    @if (Model.Position?.PositionAttributes != null)
-    {
-        foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
-        {
-            var attr = pa.AttributeDefinition;
-            var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
-
-            <div class="mb-4 border p-3 rounded">
-                <label class="form-label fw-bold">@attr.Name</label>
-                @switch (attr.Type.ToLower())
-                {
-                    case "dropdown":
-                        <select name="attributeValues[@attr.Id]" class="form-select">
-                            @if (!string.IsNullOrEmpty(attr.Options))
-                            {
-                                foreach (var option in attr.Options.Split(',', StringSplitOptions.TrimEntries))
-                                {
-                                    <option value="@option" selected="@(currentValue == option)">@option</option>
-                                }
-                            }
-                        </select>
-                        break;
-
-                    case "number":
-                        <input type="number" name="attributeValues[@attr.Id]"
-                               class="form-control" value="@currentValue" />
-                        break;
-
-                    default:
-
-                        <!-- Text / Textarea -->
-                        <textarea name="attributeValues[@attr.Id]"
-                  class="form-control" rows="3">@currentValue</textarea>
-                        break;
-                }
+            <!-- Candidate Info -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5>@Model.User?.FullName</h5>
+                    <p class="text-muted">@Model.User?.Email</p>
+                </div>
             </div>
-        }
-    }
 
-    <div class="mt-4">
-        <button type="submit" class="btn btn-success btn-lg">Save Changes</button>
-        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+            <h4 class="mb-3">Fill Required Information</h4>
+
+            @if (Model.Position?.PositionAttributes != null && Model.Position.PositionAttributes.Any())
+            {
+                foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
+                {
+                    var attr = pa.AttributeDefinition;
+                    var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
+
+                    <div class="mb-4 border p-4 rounded bg-light">
+                        <label class="form-label fw-bold">
+                            @attr.Name
+                            @if (attr.IsRequired)
+                            {
+                                <span class="text-danger">*</span>
+                            }
+                        </label>
+                        <small class="text-muted d-block mb-2">@attr.Description</small>
+
+                        @switch (attr.Type?.ToLower())
+                        {
+                            case "dropdown":
+                                <select name="attributeValues[@attr.Id]" class="form-select">
+                                    <option value="">-- Select --</option>
+                                    @if (!string.IsNullOrEmpty(attr.Options))
+                                    {
+                                        foreach (var option in attr.Options.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                                        {
+                                            <option value="@option" selected="@(currentValue == option)">@option</option>
+                                        }
+                                    }
+                                </select>
+                                break;
+
+                            case "number":
+                                <input type="number"
+                                       name="attributeValues[@attr.Id]"
+                                       class="form-control"
+                                       value="@currentValue"
+                                       placeholder="Enter number" />
+                                break;
+
+                            case "boolean":
+                                <select name="attributeValues[@attr.Id]" class="form-select">
+                                    <option value="">-- Select --</option>
+                                    <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
+                                    <option value="No" selected="@(currentValue == "No")">No</option>
+                                </select>
+                                break;
+
+                            default: // Text / Textarea
+                                     <textarea name="attributeValues[@attr.Id]"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Enter details...">@currentValue</textarea>
+                                break;
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">No attributes defined for this position.</div>
+            }
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success btn-lg px-5">
+                    <i class="bi bi-save"></i> Save Changes
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
     </div>
-</form>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6>Quick Tips</h6>
+                <ul class="small">
+                    <li>Fill all required fields marked with <span class="text-danger">*</span></li>
+                    <li>Changes will sync with your profile</li>
+                    <li>Click "Publish" after saving to make it visible to recruiters</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

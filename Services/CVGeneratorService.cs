@@ -37,8 +37,11 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.Row(row =>
             {
-                row.RelativeItem().Text("Curriculum Vitae")
-                    .FontSize(32).Bold().FontColor(Colors.Blue.Darken2);
+                row.RelativeItem().Column(column =>
+                {
+                    column.Item().Text("Curriculum Vitae")
+                        .FontSize(28).Bold().FontColor(Colors.Blue.Darken2);
+                });
             });
         }
 
@@ -46,75 +49,62 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.Column(column =>
             {
-                // Candidate Info
+                // Header Info
                 column.Item().PaddingBottom(20).Text(cv.User?.FullName ?? "Candidate")
-                    .FontSize(24).Bold().AlignCenter();
+                    .FontSize(28).Bold().AlignCenter();
 
                 column.Item().Text(cv.User?.Email ?? "").AlignCenter().FontSize(12);
 
-                column.Item().PaddingTop(10).Text($"Applied for: {cv.Position?.Title}")
-                    .FontSize(16).Bold().AlignCenter().FontColor(Colors.Grey.Darken2);
+                if (!string.IsNullOrEmpty(cv.Position?.Title))
+                    column.Item().PaddingTop(10).Text($"Applying for: {cv.Position.Title}")
+                        .FontSize(16).Bold().AlignCenter();
 
                 // Professional Summary
                 if (!string.IsNullOrEmpty(cv.CandidateProfile?.Summary))
                 {
-                    column.Item().PaddingTop(25).Text("Professional Summary").FontSize(14).Bold();
+                    column.Item().PaddingTop(25).Text("PROFESSIONAL SUMMARY").FontSize(14).Bold();
                     column.Item().LineHorizontal(1);
-
-                    var summaryLines = cv.CandidateProfile.Summary
-                        .Replace("\r\n", "\n").Split('\n');
-
-                    foreach (var line in summaryLines)
-                    {
-                        if (!string.IsNullOrWhiteSpace(line))
-                            column.Item().Text(line.Trim()).FontSize(11);
-                    }
+                    column.Item().Text(cv.CandidateProfile.Summary).FontSize(11).Leading(1.3f);
                 }
 
-                // Attributes
-                column.Item().PaddingTop(25).Text("Key Qualifications").FontSize(14).Bold();
+                // Key Qualifications / Attributes (with red highlight)
+                column.Item().PaddingTop(25).Text("KEY QUALIFICATIONS").FontSize(14).Bold();
                 column.Item().LineHorizontal(1);
 
-                foreach (var pa in cv.Position?.PositionAttributes.OrderBy(x => x.Order)
-                         ?? Enumerable.Empty<PositionAttribute>())
+                foreach (var pa in cv.Position?.PositionAttributes.OrderBy(x => x.Order) ?? Enumerable.Empty<PositionAttribute>())
                 {
                     var attr = pa.AttributeDefinition;
                     var value = attributeValues.GetValueOrDefault(attr.Id, "");
-
                     bool isEmpty = string.IsNullOrWhiteSpace(value);
 
                     column.Item().PaddingTop(8).Row(row =>
                     {
-                        row.RelativeItem(4).Text(attr.Name + ":").Bold();
+                        row.RelativeItem(4).Text(attr.Name + ":").Bold().FontSize(11);
                         row.RelativeItem(6).Text(isEmpty ? "NOT PROVIDED" : value)
-                            .FontColor(isEmpty ? Colors.Red.Medium : Colors.Black);
+                            .FontColor(isEmpty ? Colors.Red.Medium : Colors.Black)
+                            .FontSize(11);
                     });
                 }
 
-                // Projects
-                if (cv.CandidateProfile?.Projects.Any() == true)
+                // Projects Section
+                var projectsToShow = cv.CandidateProfile?.Projects
+                    .OrderByDescending(p => p.StartDate)
+                    .Take(cv.Position?.MaxProjects ?? 4)
+                    .ToList();
+
+                if (projectsToShow?.Any() == true)
                 {
-                    column.Item().PaddingTop(30).Text("Selected Projects").FontSize(14).Bold();
+                    column.Item().PaddingTop(30).Text("SELECTED PROJECTS").FontSize(14).Bold();
                     column.Item().LineHorizontal(1);
 
-                    var projects = cv.CandidateProfile.Projects
-                        .OrderByDescending(p => p.StartDate)
-                        .Take(cv.Position?.MaxProjects ?? 3);
-
-                    foreach (var p in projects)
+                    foreach (var p in projectsToShow)
                     {
-                        column.Item().PaddingTop(12).Text(p.Name).FontSize(12).Bold();
-                        column.Item().Text($"{p.StartDate:MMM yyyy} - {(p.EndDate?.ToString("MMM yyyy") ?? "Present")}");
+                        column.Item().PaddingTop(12).Text(p.Name).FontSize(12.5f).Bold();
+                        column.Item().Text($"{p.StartDate:MMM yyyy} - {(p.EndDate?.ToString("MMM yyyy") ?? "Present")}")
+                            .FontSize(10).FontColor(Colors.Grey.Medium);
 
                         if (!string.IsNullOrEmpty(p.Description))
-                        {
-                            var descLines = p.Description.Replace("\r\n", "\n").Split('\n');
-                            foreach (var line in descLines.Take(3))
-                            {
-                                if (!string.IsNullOrWhiteSpace(line))
-                                    column.Item().Text("• " + line.Trim());
-                            }
-                        }
+                            column.Item().Text(p.Description).FontSize(11);
                     }
                 }
             });
@@ -122,8 +112,8 @@ namespace talentacquisition_jobplacement_mvc.Services
 
         private void Footer(IContainer container)
         {
-            container.AlignCenter().Text($"Generated on {DateTime.UtcNow:dd MMMM yyyy} | TalentHub")
-                .FontSize(10).FontColor(Colors.Grey.Medium);
+            container.AlignCenter().Text($"Generated on {DateTime.UtcNow:dd MMMM yyyy} | TalentHub Recruitment Platform")
+                .FontSize(9).FontColor(Colors.Grey.Medium);
         }
     }
 }

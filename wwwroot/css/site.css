@@ -1,22 +1,26 @@
-html {
-  font-size: 14px;
+/* Hover Context Actions */
+.position-row {
+    transition: all 0.2s ease;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    .position-row:hover {
+        background-color: #f8f9fa;
+        transform: translateX(4px);
+    }
+
+.action-toolbar {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    display: inline-flex;
+    gap: 4px;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.position-row:hover .action-toolbar {
+    opacity: 1;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
+/* Make buttons smaller on hover */
+.action-toolbar .btn {
+    font-size: 0.85rem;
+    padding: 4px 8px;
 }

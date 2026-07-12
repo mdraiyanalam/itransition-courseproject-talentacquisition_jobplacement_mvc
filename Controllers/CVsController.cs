@@ -282,7 +282,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return RedirectToAction("Details", new { id = cvId });
         }
 
-        // POST: Publish CV (Only if complete)
+        // POST: Publish CV with Strong Validation
         [HttpPost]
         [Authorize(Roles = "Candidate,Administrator")]
         public async Task<IActionResult> Publish(int id)
@@ -290,6 +290,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var cv = await _context.CVs
                 .Include(cv => cv.Position)
                     .ThenInclude(p => p.PositionAttributes)
+                        .ThenInclude(pa => pa.AttributeDefinition)
                 .Include(cv => cv.CandidateProfile)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -299,7 +300,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             if (cv.UserId != userId && !User.IsInRole("Administrator"))
                 return Forbid();
 
-            // Check if all required attributes are filled
+            // Strong validation: All required attributes must be filled
             bool isComplete = IsCVComplete(cv);
 
             if (!isComplete)
@@ -309,6 +310,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             }
 
             cv.IsPublished = true;
+            cv.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "CV published successfully! It is now visible to Recruiters.";
@@ -383,6 +385,39 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = cvId });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Candidate,Administrator")]
+        public async Task<IActionResult> Publish(int id)
+        {
+            var cv = await _context.CVs
+                .Include(cv => cv.Position)
+                    .ThenInclude(p => p.PositionAttributes)
+                        .ThenInclude(pa => pa.AttributeDefinition)
+                .Include(cv => cv.CandidateProfile)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (cv == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (cv.UserId != userId && !User.IsInRole("Administrator"))
+                return Forbid();
+
+            // Strong validation before publish
+            bool isComplete = IsCVComplete(cv);
+
+            if (!isComplete)
+            {
+                TempData["Message"] = "Cannot publish: Please fill all required attributes first.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            cv.IsPublished = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "CV published successfully! It is now visible to Recruiters.";
+            return RedirectToAction("Details", new { id });
         }
     }
 }
