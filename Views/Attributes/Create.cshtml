@@ -1,53 +1,54 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.AttributeDefinition
-
 @{
     ViewData["Title"] = "Create New Attribute";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
 }
 
 <h1>Create New Attribute</h1>
 
-<form asp-action="Create">
+<form asp-action="Create" method="post">
     <div class="row">
         <div class="col-md-6">
             <div class="mb-3">
-                <label class="form-label">Attribute Name</label>
+                <label asp-for="Name" class="form-label"></label>
                 <input asp-for="Name" class="form-control" required />
             </div>
-
             <div class="mb-3">
-                <label class="form-label">Type</label>
-                <select asp-for="Type" class="form-select" required>
-                    <option value="">-- Select Type --</option>
-                    <option value="Text">Text</option>
-                    <option value="Number">Number</option>
-                    <option value="Dropdown">Dropdown</option>
-                    <option value="Date">Date</option>
-                    <option value="Boolean">Yes/No</option>
+                <label asp-for="Category" class="form-label"></label>
+                <select asp-for="Category" class="form-select" required>
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
                 </select>
             </div>
-
             <div class="mb-3">
-                <label class="form-label">Options <small class="text-muted">(for Dropdown only, comma separated)</small></label>
-                <textarea asp-for="Options" class="form-control" rows="3"
-                          placeholder="C#, Java, Python, JavaScript, SQL"></textarea>
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select" required>
+                    <option value="Text">Text (Single Line)</option>
+                    <option value="Markdown">Markdown Text</option>
+                    <option value="Number">Numeric</option>
+                    <option value="Date">Date</option>
+                    <option value="Boolean">Boolean (Checkbox)</option>
+                    <option value="Dropdown">Dropdown</option>
+                </select>
             </div>
         </div>
-
         <div class="col-md-6">
-            <div class="mb-3 form-check">
-                <input asp-for="IsRequired" class="form-check-input" type="checkbox" />
-                <label asp-for="IsRequired" class="form-check-label">Is Required?</label>
-            </div>
-
             <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <label asp-for="Options" class="form-label">Options (Dropdown only)</label>
+                <input asp-for="Options" class="form-control" placeholder="Option1,Option2,Option3" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsRequired" class="form-check-input" />
+                <label asp-for="IsRequired" class="form-check-label">Required Field</label>
             </div>
         </div>
     </div>
-
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Create Attribute</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </div>
+    <button type="submit" class="btn btn-primary">Create Attribute</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

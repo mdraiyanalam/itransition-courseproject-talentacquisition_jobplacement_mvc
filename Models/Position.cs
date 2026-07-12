@@ -11,11 +11,16 @@ namespace talentacquisition_jobplacement_mvc.Models
 
         public string? Description { get; set; }
 
+        public string? Company { get; set; }
+        public string? Level { get; set; }           // Junior, Mid, Senior, Lead, etc.
+        public string? ProjectTags { get; set; }     // Comma separated
+        public int? MaxProjects { get; set; } = 3;
+
+        public string? AllowedRoles { get; set; } = "Candidate";
+        public string? AccessRules { get; set; }     // JSON string for advanced rules
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        // Access Rules
-        public string? AllowedRoles { get; set; } = "Candidate"; // e.g. "Candidate,Recruiter"
 
         // Navigation
         public ICollection<PositionAttribute> PositionAttributes { get; set; } = new List<PositionAttribute>();

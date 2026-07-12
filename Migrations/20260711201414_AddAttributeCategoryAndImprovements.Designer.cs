@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using talentacquisition_jobplacement_mvc.Data;
 
@@ -11,9 +12,11 @@ using talentacquisition_jobplacement_mvc.Data;
 namespace talentacquisition_jobplacement_mvc.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260711201414_AddAttributeCategoryAndImprovements")]
+    partial class AddAttributeCategoryAndImprovements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -243,23 +246,21 @@ namespace talentacquisition_jobplacement_mvc.Migrations
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Icon")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsRequired")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Options")
                         .HasColumnType("nvarchar(max)");
@@ -269,6 +270,9 @@ namespace talentacquisition_jobplacement_mvc.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("AttributeDefinitions");
                 });
@@ -290,9 +294,6 @@ namespace talentacquisition_jobplacement_mvc.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("bit");
 
                     b.Property<int>("PositionId")
                         .HasColumnType("int");
@@ -395,7 +396,7 @@ namespace talentacquisition_jobplacement_mvc.Migrations
 
                     b.HasIndex("CandidateProfileId");
 
-                    b.ToTable("CandidateProfileAttribute");
+                    b.ToTable("CandidateProfileAttributes");
                 });
 
             modelBuilder.Entity("talentacquisition_jobplacement_mvc.Models.Comment", b =>
@@ -437,28 +438,13 @@ namespace talentacquisition_jobplacement_mvc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AccessRules")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("AllowedRoles")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Company")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Level")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("MaxProjects")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProjectTags")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
@@ -650,7 +636,7 @@ namespace talentacquisition_jobplacement_mvc.Migrations
                     b.HasOne("talentacquisition_jobplacement_mvc.Models.AttributeDefinition", "AttributeDefinition")
                         .WithMany()
                         .HasForeignKey("AttributeDefinitionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("talentacquisition_jobplacement_mvc.Models.CandidateProfile", "CandidateProfile")

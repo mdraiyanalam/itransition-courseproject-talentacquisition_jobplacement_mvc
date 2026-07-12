@@ -1,0 +1,51 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.CV
+
+@{
+    ViewData["Title"] = "Edit CV";
+    var attributeValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+<h1>Edit CV for @Model.Position?.Title</h1>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="PositionId" />
+
+    @if (Model.Position?.PositionAttributes != null)
+    {
+        foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
+        {
+            var attr = pa.AttributeDefinition;
+            var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
+
+            <div class="mb-4 border p-3 rounded">
+                <label class="form-label fw-bold">@attr.Name</label>
+                @switch (attr.Type.ToLower())
+                {
+                    case "dropdown":
+                        <select name="attributeValues[@attr.Id]" class="form-select">
+                            @if (!string.IsNullOrEmpty(attr.Options))
+                            {
+                                foreach (var option in attr.Options.Split(',', StringSplitOptions.TrimEntries))
+                                {
+                                    <option value="@option" selected="@(currentValue == option)">@option</option>
+                                }
+                            }
+                        </select>
+                        break;
+
+                    case "number":
+                        <input type="number" name="attributeValues[@attr.Id]" class="form-control" value="@currentValue" />
+                        break;
+
+                    default:
+                        <textarea name="attributeValues[@attr.Id]" class="form-control" rows="3">@currentValue</textarea>
+                        break;
+                }
+            </div>
+        }
+    }
+
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+</form>

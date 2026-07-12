@@ -1,84 +1,58 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
 @{
     ViewData["Title"] = "Apply - " + (Model.Position?.Title ?? "Position");
-
-    var attributes = Model.Position?.PositionAttributes
-        .OrderBy(pa => pa.Order)
-        .Select(pa => pa.AttributeDefinition)
-        .ToList() ?? new List<AttributeDefinition>();
 }
 
-<h1>Apply for Position</h1>
-<h2 class="text-primary">@Model.Position?.Title</h2>
+<h1>Apply for: <span class="text-primary">@Model.Position?.Title</span></h1>
 <p class="lead">@Model.Position?.Description</p>
-
-<hr />
 
 <form asp-action="Create" method="post">
     <input type="hidden" asp-for="PositionId" />
 
-    <h4 class="mb-3">Please fill the following information</h4>
-
+    <h4 class="mt-4">Required Information</h4>
     <div class="row">
-        @foreach (var attr in attributes)
+        @if (Model.Position?.PositionAttributes != null)
         {
-            <div class="col-md-6 mb-4">
-                <label class="form-label fw-bold">
-                    @attr.Name
-                    @if (attr.IsRequired)
+            foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
+            {
+                var attr = pa.AttributeDefinition;
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">
+                        @attr.Name @(attr.IsRequired ? "*" : "")
+                    </label>
+
+                    @if (attr.Type == "Boolean")
                     {
-                        <span class="text-danger">*</span>
-                    }
-                </label>
-                @if (!string.IsNullOrEmpty(attr.Description))
-                {
-                    <small class="text-muted d-block mb-1">@attr.Description</small>
-                }
-
-                @switch (attr.Type?.ToLower())
-                {
-                    case "dropdown":
-                        <select name="attributeValues[@attr.Id]" class="form-select" required="@attr.IsRequired">
-                            <option value="">-- Select Option --</option>
-                            @foreach (var option in (attr.Options ?? "").Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
-                            {
-                                <option value="@option">@option</option>
-                            }
-                        </select>
-                        break;
-
-                    case "number":
-                        <input type="number"
-                               name="attributeValues[@attr.Id]"
-                               class="form-control"
-                               required="@attr.IsRequired"
-                               placeholder="Enter number" />
-                        break;
-
-                    case "boolean":
-                        <select name="attributeValues[@attr.Id]" class="form-select" required="@attr.IsRequired">
-                            <option value="">-- Select --</option>
+                        <select name="attributeValues[@attr.Id]" class="form-select">
+                            <option value="">Select</option>
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
                         </select>
-                        break;
-
-                    default: // Text
-                             <input type="text"
-                                    name="attributeValues[@attr.Id]"
-                                    class="form-control"
-                                    required="@attr.IsRequired"
-                                    placeholder="Enter your answer..." />
-                        break;
-                }
-            </div>
+                    }
+                    else if (attr.Type == "Dropdown" && !string.IsNullOrEmpty(attr.Options))
+                    {
+                        <select name="attributeValues[@attr.Id]" class="form-select">
+                            <option value="">-- Select --</option>
+                            @foreach (var opt in attr.Options.Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
+                            {
+                                <option value="@opt">@opt</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input type="text"
+                               name="attributeValues[@attr.Id]"
+                               class="form-control"
+                               placeholder="Enter value..." />
+                    }
+                </div>
+            }
         }
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-success btn-lg px-5">
-            <i class="bi bi-send-fill"></i> Submit Application
-        </button>
+        <button type="submit" class="btn btn-success btn-lg">Submit Application</button>
         <a asp-controller="Positions" asp-action="Index" class="btn btn-secondary btn-lg">Cancel</a>
     </div>
 </form>

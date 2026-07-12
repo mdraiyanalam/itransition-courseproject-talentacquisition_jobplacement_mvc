@@ -9,13 +9,36 @@
 <form asp-action="Create" method="post">
     <div class="row">
         <div class="col-md-8">
+            <!-- Basic Info -->
             <div class="mb-3">
-                <label class="form-label">Position Title</label>
+                <label asp-for="Title" class="form-label"></label>
                 <input asp-for="Title" class="form-control" required />
             </div>
             <div class="mb-3">
-                <label class="form-label">Description</label>
+                <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Company" class="form-label">Company / Department</label>
+                    <input asp-for="Company" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Level" class="form-label">Level</label>
+                    <select asp-for="Level" class="form-select">
+                        <option value="">Select Level</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Mid">Mid</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Lead">Lead</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3 mt-3">
+                <label class="form-label">Preferred Project Tags (comma separated)</label>
+                <input asp-for="ProjectTags" class="form-control" placeholder="React, .NET, Azure, SQL" />
             </div>
         </div>
 
@@ -23,11 +46,11 @@
             <h5>Select Attributes</h5>
             @if (allAttributes != null)
             {
-                @foreach (var attr in allAttributes)
+                foreach (var attr in allAttributes)
                 {
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input type="checkbox" name="selectedAttributes" value="@attr.Id" class="form-check-input" />
-                        <label class="form-check-label">@attr.Name <small class="text-muted">(@attr.Type)</small></label>
+                        <label class="form-check-label">@attr.Name <small>(@attr.Type)</small></label>
                     </div>
                 }
             }
@@ -35,20 +58,33 @@
     </div>
 
     <!-- Access Rules -->
-    <div class="mb-3">
-        <label class="form-label">Who can apply to this position?</label>
-        <div class="form-check">
-            <input type="checkbox" name="AllowedRoles" value="Candidate" class="form-check-input" checked />
-            <label class="form-check-label">Candidates</label>
+    <div class="card mt-4">
+        <div class="card-header">
+            <strong>Access Rules</strong>
         </div>
-        <div class="form-check">
-            <input type="checkbox" name="AllowedRoles" value="Recruiter" class="form-check-input" />
-            <label class="form-check-label">Recruiters</label>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Who can apply?</label>
+                <div class="form-check">
+                    <input type="checkbox" name="AllowedRoles" value="Candidate" class="form-check-input" checked />
+                    <label class="form-check-label">Candidates</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" name="AllowedRoles" value="Recruiter" class="form-check-input" />
+                    <label class="form-check-label">Recruiters (Internal)</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Advanced Rules (JSON)</label>
+                <textarea asp-for="AccessRules" class="form-control" rows="4"
+                          placeholder='{"MinExperience": 2, "RequiredEnglishLevel": "Intermediate"}'></textarea>
+            </div>
         </div>
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Create Position</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">Create Position</button>
+        <a asp-action="Index" class="btn btn-secondary btn-lg">Cancel</a>
     </div>
 </form>

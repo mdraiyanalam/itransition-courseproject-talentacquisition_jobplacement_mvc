@@ -20,7 +20,6 @@ namespace talentacquisition_jobplacement_mvc.Data
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<Comment> Comments { get; set; } = null!;
         public DbSet<CVLike> CVLikes { get; set; } = null!;
-        public DbSet<CandidateProfileAttribute> CandidateProfileAttributes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -72,33 +71,19 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasForeignKey(p => p.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // NEW: Comments
+            // Comments
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.CV)
                 .WithMany(cv => cv.Comments)
                 .HasForeignKey(c => c.CVId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // In OnModelCreating:
+            // Likes
             modelBuilder.Entity<CVLike>()
                 .HasOne(l => l.CV)
                 .WithMany(cv => cv.Likes)
                 .HasForeignKey(l => l.CVId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-
-            modelBuilder.Entity<CandidateProfileAttribute>()
-                .HasOne(cpa => cpa.CandidateProfile)
-                .WithMany(cp => cp.ProfileAttributes)
-                .HasForeignKey(cpa => cpa.CandidateProfileId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CandidateProfileAttribute>()
-                .HasOne(cpa => cpa.AttributeDefinition)
-                .WithMany()
-                .HasForeignKey(cpa => cpa.AttributeDefinitionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

@@ -16,18 +16,43 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context = context;
         }
 
-        // GET: Attributes
-        public async Task<IActionResult> Index()
+        // GET: Attributes with Search & Category Filter
+        public async Task<IActionResult> Index(string searchString, string categoryFilter)
         {
-            var attributes = await _context.AttributeDefinitions
-                .OrderBy(a => a.Name)
+            var attributes = _context.AttributeDefinitions
+                .OrderBy(a => a.Category)
+                .ThenBy(a => a.Name)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                attributes = attributes.Where(a =>
+                    a.Name.ToLower().Contains(searchString) ||
+                    (a.Description != null && a.Description.ToLower().Contains(searchString))
+                );
+            }
+
+            if (!string.IsNullOrEmpty(categoryFilter))
+            {
+                attributes = attributes.Where(a => a.Category == categoryFilter);
+            }
+
+            ViewBag.SearchString = searchString;
+            ViewBag.CategoryFilter = categoryFilter;
+            ViewBag.Categories = await _context.AttributeDefinitions
+                .Select(a => a.Category)
+                .Distinct()
+                .OrderBy(c => c)
                 .ToListAsync();
-            return View(attributes);
+
+            return View(await attributes.ToListAsync());
         }
 
         // GET: Attributes/Create
         public IActionResult Create()
         {
+            ViewBag.Categories = GetPredefinedCategories();
             return View();
         }
 
@@ -40,8 +65,10 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             {
                 _context.Add(attributeDefinition);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Attribute created successfully!";
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Categories = GetPredefinedCategories();
             return View(attributeDefinition);
         }
 
@@ -53,6 +80,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var attribute = await _context.AttributeDefinitions.FindAsync(id);
             if (attribute == null) return NotFound();
 
+            ViewBag.Categories = GetPredefinedCategories();
             return View(attribute);
         }
 
@@ -69,6 +97,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 {
                     _context.Update(attributeDefinition);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Attribute updated successfully!";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -76,8 +106,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                         return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
+            ViewBag.Categories = GetPredefinedCategories();
             return View(attributeDefinition);
         }
 
@@ -88,6 +118,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             var attribute = await _context.AttributeDefinitions
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (attribute == null) return NotFound();
 
             return View(attribute);
@@ -103,6 +134,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             {
                 _context.AttributeDefinitions.Remove(attribute);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Attribute deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -110,6 +142,16 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         private bool AttributeDefinitionExists(int id)
         {
             return _context.AttributeDefinitions.Any(e => e.Id == id);
+        }
+
+        private List<string> GetPredefinedCategories()
+        {
+            return new List<string>
+            {
+                "Personal Information", "Education", "Experience", "Skills",
+                "Certifications", "Languages", "Soft Skills",
+                "Domain Knowledge", "Availability", "General"
+            };
         }
     }
 }

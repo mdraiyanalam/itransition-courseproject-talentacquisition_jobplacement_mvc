@@ -44,7 +44,7 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
 }
 else
 {
-    Console.WriteLine("⚠️  Google Authentication is disabled (ClientId/Secret not found in configuration).");
+    Console.WriteLine("⚠️ Google Authentication is disabled (ClientId/Secret not found in configuration).");
 }
 
 // MVC Services
@@ -89,5 +89,17 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+
+// Fix Google Login Logout Redirect
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Request.Path.StartsWithSegments("/Identity/Account/Logout") &&
+        context.Response.StatusCode == 200)
+    {
+        context.Response.Redirect("/");
+    }
+});
 
 app.Run();

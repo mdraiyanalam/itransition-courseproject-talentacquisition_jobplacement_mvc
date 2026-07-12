@@ -1,0 +1,33 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.Position
+
+<h1>@Model.Title</h1>
+<p>@Model.Description</p>
+
+<h4>Applications Received (@Model.CVs.Count)</h4>
+
+<table class="table table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Candidate</th>
+            <th>Applied On</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cv in Model.CVs.OrderByDescending(c => c.CreatedAt))
+        {
+            <tr>
+                <td>@cv.User?.FullName</td>
+                <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                <td>
+                    <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id"
+                       class="btn btn-sm btn-primary">View CV</a>
+                    <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id"
+                       class="btn btn-sm btn-success">Download PDF</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">← Back to Positions</a>

@@ -7,14 +7,23 @@ namespace talentacquisition_jobplacement_mvc.Models
         public int Id { get; set; }
 
         [Required]
-        public string Name { get; set; } = string.Empty;   // e.g. "English Level", "GPA", "Years of Experience"
+        [StringLength(100)]
+        public string Name { get; set; } = string.Empty;
 
         [Required]
-        public string Type { get; set; } = string.Empty;   // Text, Number, Dropdown, Date, Boolean
+        [StringLength(50)]
+        public string Category { get; set; } = "General";
 
-        public string? Options { get; set; }               // JSON string for dropdown options
+        [Required]
+        public string Type { get; set; } = "Text";
+
+        public string? Options { get; set; }
 
         public bool IsRequired { get; set; } = true;
+
+        [StringLength(500)]
         public string? Description { get; set; }
+
+        public string? Icon { get; set; }
     }
 }

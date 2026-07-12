@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.Json;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [AllowAnonymous]
+    [Authorize]
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -30,7 +31,9 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 searchString = searchString.ToLower();
                 positions = positions.Where(p =>
                     p.Title.ToLower().Contains(searchString) ||
-                    (p.Description != null && p.Description.ToLower().Contains(searchString))
+                    (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
+                    (p.Company != null && p.Company.ToLower().Contains(searchString)) ||
+                    (p.ProjectTags != null && p.ProjectTags.ToLower().Contains(searchString))
                 );
             }
 
@@ -47,14 +50,13 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     string.IsNullOrWhiteSpace(profile.Summary))
                 {
                     ViewBag.ProfileIncomplete = true;
-                    ViewBag.ProfileMessage = "Please complete your Full Name and Professional Summary before applying.";
+                    ViewBag.ProfileMessage = "Please complete your profile before applying.";
                 }
             }
 
             return View(await positions.ToListAsync());
         }
 
-        // GET: Positions/Create
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Create()
         {
@@ -62,7 +64,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View();
         }
 
-        // POST: Positions/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Recruiter,Administrator")]
@@ -70,7 +71,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         {
             if (ModelState.IsValid)
             {
-                position.AllowedRoles = Request.Form["AllowedRoles"].ToString() ?? "Candidate";
+                position.CreatedAt = DateTime.UtcNow;
+                position.UpdatedAt = DateTime.UtcNow;
 
                 _context.Add(position);
 
@@ -87,6 +89,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                TempData["Success"] = $"Position '<b>{position.Title}</b>' created successfully!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -94,7 +97,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // GET: Positions/Edit/5
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -112,7 +114,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // POST: Positions/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Recruiter,Administrator")]
@@ -132,8 +133,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 {
                     existing.Title = position.Title;
                     existing.Description = position.Description;
+                    existing.Company = position.Company;
+                    existing.Level = position.Level;
+                    existing.ProjectTags = position.ProjectTags;
+                    existing.MaxProjects = position.MaxProjects;
+                    existing.AccessRules = position.AccessRules;
                     existing.UpdatedAt = DateTime.UtcNow;
-                    existing.AllowedRoles = Request.Form["AllowedRoles"].ToString() ?? "Candidate";
 
                     _context.PositionAttributes.RemoveRange(existing.PositionAttributes);
 
@@ -150,11 +155,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = $"Position '<b>{existing.Title}</b>' updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Error saving position: " + ex.Message);
+                    ModelState.AddModelError("", ex.Message);
                 }
             }
 
@@ -164,7 +170,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(position);
         }
 
-        // Duplicate Position
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Duplicate(int id)
         {
@@ -178,9 +183,13 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             {
                 Title = position.Title + " (Copy)",
                 Description = position.Description,
+                Company = position.Company,
+                Level = position.Level,
+                ProjectTags = position.ProjectTags,
+                MaxProjects = position.MaxProjects,
+                AccessRules = position.AccessRules,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                AllowedRoles = position.AllowedRoles
+                UpdatedAt = DateTime.UtcNow
             };
 
             foreach (var pa in position.PositionAttributes)
@@ -195,40 +204,13 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context.Positions.Add(newPosition);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"✅ Position '<b>{position.Title}</b>' duplicated successfully!";
+            TempData["Success"] = $"Position duplicated successfully!";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Positions/Delete/5
-        [Authorize(Roles = "Recruiter,Administrator")]
-        public async Task<IActionResult> Delete(int? id)
+        private bool PositionExists(int id)
         {
-            if (id == null) return NotFound();
-
-            var position = await _context.Positions
-                .Include(p => p.PositionAttributes)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (position == null) return NotFound();
-
-            return View(position);
-        }
-
-        // POST: Positions/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Recruiter,Administrator")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var position = await _context.Positions.FindAsync(id);
-            if (position != null)
-            {
-                _context.Positions.Remove(position);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"Position '{position.Title}' deleted successfully.";
-            }
-
-            return RedirectToAction(nameof(Index));
+            return _context.Positions.Any(e => e.Id == id);
         }
     }
 }
