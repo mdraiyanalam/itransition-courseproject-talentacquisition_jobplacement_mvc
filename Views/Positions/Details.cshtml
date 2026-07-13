@@ -1,4 +1,8 @@
-﻿@model talentacquisition_jobplacement_mvc.Models.Position
+﻿@using talentacquisition_jobplacement_mvc.Helpers
+@model talentacquisition_jobplacement_mvc.Models.Position
+@{
+    ViewData["Title"] = Model.Title;
+}
 
 <h1>@Model.Title</h1>
 <p>@Model.Description</p>
@@ -29,15 +33,12 @@
                         }
                         else
                         {
-
                             <span class="badge bg-secondary">Draft</span>
                         }
                     </td>
                     <td>
-                        <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id"
-                           class="btn btn-sm btn-primary">View CV</a>
-                        <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id"
-                           class="btn btn-sm btn-success">Download PDF</a>
+                        <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-primary">View CV</a>
+                        <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">Download PDF</a>
                     </td>
                 </tr>
             }
@@ -49,4 +50,42 @@ else
     <div class="alert alert-info">No applications yet.</div>
 }
 
-<a asp-action="Index" class="btn btn-secondary">← Back to Positions</a>
+<!-- Discussions Section -->
+<div class="mt-5">
+    <h4><i class="bi bi-chat-dots"></i> Discussions (@(Model.DiscussionPosts?.Count ?? 0))</h4>
+
+    <div id="discussionContainer" class="comments-container border p-3 mb-3 bg-light" style="max-height:500px;overflow-y:auto;">
+        @foreach (var post in Model.DiscussionPosts?.OrderBy(p => p.CreatedAt) ?? Enumerable.Empty<DiscussionPost>())
+        {
+            <div class="d-flex mb-3">
+                <div class="flex-grow-1">
+                    <strong>@post.User?.FullName</strong>
+                    <small class="text-muted ms-2">@post.CreatedAt.ToString("g")</small>
+                    <div class="mt-1">@Html.Raw(MarkdownHelper.ToHtml(post.Message))</div>
+                </div>
+                @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+                {
+                    <a asp-controller="Profiles" asp-action="ViewProfile" asp-route-userId="@post.UserId" class="btn btn-sm btn-outline-secondary">Profile</a>
+                }
+            </div>
+        }
+    </div>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <form asp-action="AddDiscussion" method="post">
+            <input type="hidden" name="PositionId" value="@Model.Id" />
+            <textarea name="Message" class="form-control" rows="3" placeholder="Write a comment... (Markdown supported)" required></textarea>
+            <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
+        </form>
+    }
+</div>
+
+<a asp-action="Index" class="btn btn-secondary mt-4">← Back to Positions</a>
+
+@section Scripts {
+    <script>
+        // Auto-refresh discussions
+        setInterval(() => location.reload(), 8000);
+    </script>
+}

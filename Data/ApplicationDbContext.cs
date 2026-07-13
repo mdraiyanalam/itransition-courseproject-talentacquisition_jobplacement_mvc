@@ -21,6 +21,7 @@ namespace talentacquisition_jobplacement_mvc.Data
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<Comment> Comments { get; set; } = null!;
         public DbSet<CVLike> CVLikes { get; set; } = null!;
+        public DbSet<DiscussionPost> DiscussionPosts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -85,6 +86,19 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .WithMany(cv => cv.Likes)
                 .HasForeignKey(l => l.CVId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Discussion Posts
+            modelBuilder.Entity<DiscussionPost>()
+                .HasOne(d => d.Position)
+                .WithMany(p => p.DiscussionPosts)
+                .HasForeignKey(d => d.PositionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DiscussionPost>()
+                .HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

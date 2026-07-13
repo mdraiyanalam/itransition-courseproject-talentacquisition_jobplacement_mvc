@@ -7,7 +7,6 @@ using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -19,8 +18,47 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        [AllowAnonymous]
+        public async Task<IActionResult> Index()
         {
+            // Latest Positions
+            var latestPositions = await _context.Positions
+                .Include(p => p.CVs)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(8)
+                .ToListAsync();
+
+            // Most Popular Positions (Top 5 by CV count)
+            var popularPositions = await _context.Positions
+                .Include(p => p.CVs)
+                .OrderByDescending(p => p.CVs.Count)
+                .Take(5)
+                .ToListAsync();
+
+            // Tag Cloud
+            var allTags = await _context.Positions
+                .Where(p => !string.IsNullOrEmpty(p.ProjectTags))
+                .Select(p => p.ProjectTags)
+                .ToListAsync();
+
+            var tagCloud = allTags
+                .SelectMany(tags => tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(t => t.Trim())
+                .GroupBy(t => t)
+                .Select(g => new { Tag = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(15)
+                .ToList();
+
+            ViewBag.LatestPositions = latestPositions;
+            ViewBag.PopularPositions = popularPositions;
+            ViewBag.TagCloud = tagCloud;
+
+            // Quick Stats
+            ViewBag.TotalCVs = await _context.CVs.CountAsync();
+            ViewBag.TotalPositions = await _context.Positions.CountAsync();
+            ViewBag.TotalCandidates = await _context.Users.CountAsync();
+
             return View();
         }
 

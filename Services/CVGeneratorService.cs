@@ -67,7 +67,9 @@ namespace talentacquisition_jobplacement_mvc.Services
                 {
                     column.Item().PaddingTop(30).Text("PROFESSIONAL SUMMARY").FontSize(14).Bold();
                     column.Item().LineHorizontal(1);
-                    column.Item().Text(cv.CandidateProfile.Summary).FontSize(11).Leading(1.4f);
+                    column.Item().Text(cv.CandidateProfile.Summary)
+                        .FontSize(11)
+                        .LineHeight(1.4f);   // Fixed: Use LineHeight instead of Leading
                 }
 
                 // Key Qualifications / Attributes
@@ -107,7 +109,9 @@ namespace talentacquisition_jobplacement_mvc.Services
                             .FontSize(10).FontColor(Colors.Grey.Medium);
 
                         if (!string.IsNullOrEmpty(p.Description))
-                            column.Item().Text(p.Description).FontSize(11).Leading(1.3f);
+                            column.Item().Text(p.Description)
+                                .FontSize(11)
+                                .LineHeight(1.3f);   // Fixed here too
                     }
                 }
             });

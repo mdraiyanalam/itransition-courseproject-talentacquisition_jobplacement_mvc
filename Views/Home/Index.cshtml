@@ -1,10 +1,17 @@
-﻿@{
-    ViewData["Title"] = "Talent Acquisition";
+﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.Position>
+@using talentacquisition_jobplacement_mvc.Helpers
+
+@{
+    ViewData["Title"] = "TalentHub - Find Your Next Opportunity";
+    var latest = ViewBag.LatestPositions as List<Position> ?? new List<Position>();
+    var popular = ViewBag.PopularPositions as List<Position> ?? new List<Position>();
+    var tags = ViewBag.TagCloud as List<dynamic> ?? new List<dynamic>();
 }
 
+<!-- Hero Section -->
 <div class="bg-primary text-white py-5 text-center">
     <div class="container">
-        <h1 class="display-4 fw-bold">Talent Acquisition</h1>
+        <h1 class="display-4 fw-bold">TalentHub</h1>
         <p class="lead mb-4">Connecting talented candidates with the right opportunities</p>
         <div class="d-flex justify-content-center gap-3">
             <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-light btn-lg">Get Started</a>
@@ -14,21 +21,93 @@
 </div>
 
 <div class="container my-5">
-    <div class="row text-center">
-        <div class="col-md-4">
-            <i class="bi bi-briefcase-fill display-1 text-primary"></i>
-            <h4 class="mt-3">Smart Positions</h4>
-            <p>Custom job templates with dynamic attributes</p>
+    <!-- Statistics -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-primary">
+                <div class="card-body">
+                    <h3 class="text-primary">@ViewBag.TotalCVs</h3>
+                    <p class="mb-0">Total CVs</p>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <i class="bi bi-file-earmark-text display-1 text-primary"></i>
-            <h4 class="mt-3">Auto CV Generation</h4>
-            <p>Professional PDFs generated instantly</p>
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-success">
+                <div class="card-body">
+                    <h3 class="text-success">@ViewBag.TotalPositions</h3>
+                    <p class="mb-0">Open Positions</p>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <i class="bi bi-people-fill display-1 text-primary"></i>
-            <h4 class="mt-3">Easy Collaboration</h4>
-            <p>Comments, likes &amp; team review</p>
+        <div class="col-md-3">
+            <div class="card text-center h-100 border-info">
+                <div class="card-body">
+                    <h3 class="text-info">@ViewBag.TotalCandidates</h3>
+                    <p class="mb-0">Candidates</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Latest Positions -->
+        <div class="col-lg-7">
+            <h4 class="mb-3">Latest Positions</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Position</th>
+                            <th>Company</th>
+                            <th>Level</th>
+                            <th>Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in latest)
+                        {
+                            <tr>
+                                <td><strong>@p.Title</strong></td>
+                                <td>@p.Company</td>
+                                <td><span class="badge bg-info">@p.Level</span></td>
+                                <td>@p.CVs.Count</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Most Popular -->
+        <div class="col-lg-5">
+            <h4 class="mb-3">Most Popular Positions</h4>
+            <div class="list-group">
+                @foreach (var p in popular)
+                {
+                    <a href="@Url.Action("Details", "Positions", new { id = p.Id })"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@p.Title</strong><br />
+                            <small class="text-muted">@p.Company</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">@p.CVs.Count CVs</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Cloud -->
+    <div class="mt-5">
+        <h4>Technology Tag Cloud</h4>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var item in tags)
+            {
+                <a href="@Url.Action("Index", "Positions", new { searchString = item.Tag })"
+                   class="badge bg-secondary text-decoration-none fs-6 px-3 py-2">
+                    @item.Tag <span class="text-white-50">(@item.Count)</span>
+                </a>
+            }
         </div>
     </div>
 </div>

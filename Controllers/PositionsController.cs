@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
@@ -211,6 +212,34 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             TempData["Success"] = $"Position duplicated successfully!";
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Add Discussion Post
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddDiscussion(int PositionId, string Message)
+        {
+            if (string.IsNullOrWhiteSpace(Message))
+            {
+                TempData["Error"] = "Message cannot be empty.";
+                return RedirectToAction(nameof(Details), new { id = PositionId });
+            }
+
+            var position = await _context.Positions.FindAsync(PositionId);
+            if (position == null) return NotFound();
+
+            var discussion = new DiscussionPost
+            {
+                PositionId = PositionId,
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+                Message = Message.Trim()
+            };
+
+            _context.DiscussionPosts.Add(discussion);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Comment posted successfully!";
+            return RedirectToAction(nameof(Details), new { id = PositionId });
         }
     }
 }

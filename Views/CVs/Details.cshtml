@@ -1,6 +1,7 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
 @using talentacquisition_jobplacement_mvc.Helpers
 @using System.Security.Claims
+
 @{
     ViewData["Title"] = $"CV - {Model.Position?.Title}";
     var attrValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
@@ -21,16 +22,19 @@
             </div>
         </div>
 
-        <!-- Like Button -->
+        <!-- Like Button (Recruiter Only) -->
         <div class="mt-3 mb-4">
-            <form asp-action="ToggleLike" method="post" style="display: inline;">
-                <input type="hidden" name="cvId" value="@Model.Id" />
-                <button type="submit" class="btn btn-outline-danger btn-lg" id="likeButton">
-                    <i class="bi bi-heart@(Model.Likes.Any(l => l.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier)) ? "-fill" : "")"></i>
-                    <span id="likeCount">@Model.Likes.Count</span>
-                </button>
-            </form>
-            <small class="text-muted ms-2">people liked this CV</small>
+            @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+            {
+                <form asp-action="ToggleLike" method="post" style="display: inline;">
+                    <input type="hidden" name="cvId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger btn-lg">
+                        <i class="bi bi-heart@(Model.Likes.Any(l => l.UserId == userId) ? "-fill" : "")"></i>
+                        <span id="likeCount">@Model.Likes.Count</span>
+                    </button>
+                </form>
+            }
+            <small class="text-muted ms-2">Recruiters liked this CV</small>
         </div>
 
         <!-- Publish Controls -->
@@ -69,7 +73,6 @@
                     var attr = pa.AttributeDefinition;
                     var value = attrValues.GetValueOrDefault(attr.Id, "");
                     bool isEmpty = string.IsNullOrWhiteSpace(value);
-
                     <tr>
                         <td><strong>@attr.Name</strong> <small>(@attr.Type)</small></td>
                         <td>
@@ -123,7 +126,6 @@
 <!-- Comments Section -->
 <div class="mt-5">
     <h4><i class="bi bi-chat-dots"></i> Comments (@Model.Comments.Count)</h4>
-
     @if (Model.Comments.Any())
     {
         <div class="comments-container">
@@ -134,11 +136,9 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <strong>@comment.User?.FullName</strong>
-                                <small class="text-muted ms-2">
-                                    @comment.CreatedAt.ToString("dd MMM yyyy HH:mm")
-                                </small>
+                                <small class="text-muted ms-2">@comment.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
                             </div>
-                            @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == comment.UserId)
+                            @if (userId == comment.UserId)
                             {
                                 <span class="badge bg-secondary">You</span>
                             }
@@ -154,14 +154,12 @@
         <div class="alert alert-info">No comments yet. Be the first to comment!</div>
     }
 
-    <!-- Add Comment Form -->
     <div class="card mt-4">
         <div class="card-body">
             <form asp-action="AddComment" method="post" id="commentForm">
                 <input type="hidden" name="cvId" value="@Model.Id" />
                 <div class="input-group">
-                    <textarea name="message" class="form-control" rows="2"
-                              placeholder="Write a comment..." required></textarea>
+                    <textarea name="message" class="form-control" rows="2" placeholder="Write a comment..." required></textarea>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-send"></i> Send
                     </button>
