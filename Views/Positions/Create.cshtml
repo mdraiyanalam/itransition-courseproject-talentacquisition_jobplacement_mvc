@@ -8,6 +8,7 @@
 
 <form asp-action="Create" method="post" id="positionForm">
     <div class="row">
+        <!-- Main Information -->
         <div class="col-md-8">
             <div class="mb-3">
                 <label asp-for="Title" class="form-label"></label>
@@ -33,8 +34,17 @@
                     </select>
                 </div>
             </div>
+            <div class="mb-3 mt-3">
+                <label asp-for="MaxProjects" class="form-label">Maximum Projects to show in CV</label>
+                <input asp-for="MaxProjects" type="number" class="form-control" min="1" max="10" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Preferred Project Tags (comma separated)</label>
+                <input asp-for="ProjectTags" class="form-control" placeholder="React, .NET, Azure, SQL" />
+            </div>
         </div>
 
+        <!-- Attributes Selection -->
         <div class="col-md-4">
             <h5>Select Attributes</h5>
             @if (allAttributes != null)
@@ -43,21 +53,25 @@
                 {
                     <div class="form-check mb-2">
                         <input type="checkbox" name="selectedAttributes" value="@attr.Id" class="form-check-input" />
-                        <label class="form-check-label">@attr.Name <small>(@attr.Type)</small></label>
+                        <label class="form-check-label">
+                            @attr.Name <small class="text-muted">(@attr.Type)</small>
+                        </label>
                     </div>
                 }
             }
         </div>
     </div>
 
-    <!-- Access Rules - Dynamic Builder -->
+    <!-- Access Rules - Improved UI -->
     <div class="card mt-4">
         <div class="card-header bg-primary text-white">
-            <strong>Access Rules (Killer Feature)</strong>
+            <strong>Access Rules <small>(Killer Feature - Who can apply?)</small></strong>
         </div>
         <div class="card-body">
             <div id="rulesContainer"></div>
-            <button type="button" class="btn btn-success btn-sm mt-3" onclick="addRule()">+ Add Access Rule</button>
+            <button type="button" class="btn btn-success btn-sm mt-3" onclick="addRule()">
+                <i class="bi bi-plus-circle"></i> Add Access Rule
+            </button>
             <input type="hidden" name="AccessRulesJson" id="AccessRulesJson" />
         </div>
     </div>
@@ -77,9 +91,11 @@
             const index = rules.length;
 
             const ruleHtml = `
-                <div class="border p-3 mb-3 rounded bg-light" id="rule-${index}">
+                <div class="border p-3 mb-3 rounded bg-light position-relative" id="rule-${index}">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeRule(${index})"></button>
                     <div class="row g-2">
                         <div class="col-md-5">
+                            <label class="form-label small">Attribute</label>
                             <select class="form-select" id="attr-${index}" onchange="updateRule(${index})">
                                 <option value="">Select Attribute</option>
                                 @foreach (var attr in allAttributes ?? new List<AttributeDefinition>())
@@ -88,22 +104,21 @@
                                 }
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Operator</label>
                             <select class="form-select" id="op-${index}" onchange="updateRule(${index})">
                                 <option value="=">= Equal</option>
                                 <option value="!=">≠ Not Equal</option>
-                                <option value=">">&gt; Greater</option>
-                                <option value="<">&lt; Less</option>
+                                <option value=">">&gt; Greater Than</option>
+                                <option value="<">&lt; Less Than</option>
                                 <option value=">=">≥ Greater or Equal</option>
                                 <option value="<=">≤ Less or Equal</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="form-label small">Value</label>
                             <input type="text" class="form-control" id="val-${index}"
                                    placeholder="Value" onchange="updateRule(${index})" />
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRule(${index})">×</button>
                         </div>
                     </div>
                 </div>`;
@@ -122,27 +137,29 @@
         }
 
         function removeRule(index) {
-            document.getElementById(`rule-${index}`).remove();
+            const element = document.getElementById(`rule-${index}`);
+            if (element) element.remove();
             rules = rules.filter((_, i) => i !== index);
         }
 
-        // Save rules on form submit
         document.getElementById('positionForm').addEventListener('submit', function() {
-            document.getElementById('AccessRulesJson').value = JSON.stringify(rules.filter(r => r.AttributeDefinitionId > 0));
+            document.getElementById('AccessRulesJson').value = JSON.stringify(
+                rules.filter(r => r.AttributeDefinitionId > 0)
+            );
         });
 
-        // Load existing rules when editing
         window.onload = function() {
             if (rules.length > 0) {
                 rules.forEach((rule, index) => {
                     addRule();
                     setTimeout(() => {
-                        if (document.getElementById(`attr-${index}`)) {
-                            document.getElementById(`attr-${index}`).value = rule.AttributeDefinitionId || "";
-                            document.getElementById(`op-${index}`).value = rule.Operator || "=";
-                            document.getElementById(`val-${index}`).value = rule.Value || "";
-                        }
-                    }, 100);
+                        const attrSelect = document.getElementById(`attr-${index}`);
+                        const opSelect = document.getElementById(`op-${index}`);
+                        const valInput = document.getElementById(`val-${index}`);
+                        if (attrSelect) attrSelect.value = rule.AttributeDefinitionId || "";
+                        if (opSelect) opSelect.value = rule.Operator || "=";
+                        if (valInput) valInput.value = rule.Value || "";
+                    }, 150);
                 });
             }
         };

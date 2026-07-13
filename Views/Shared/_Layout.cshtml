@@ -15,6 +15,57 @@
             font-weight: bold;
             font-size: 1.45rem;
         }
+
+        /* Comments & Likes Polish */
+        .comments-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .card {
+            transition: transform 0.2s ease;
+        }
+
+            .card:hover {
+                transform: translateY(-2px);
+            }
+
+        .btn-outline-danger {
+            transition: all 0.2s ease;
+        }
+
+            .btn-outline-danger:hover {
+                transform: scale(1.05);
+            }
+
+        /* Final Polish */
+        .action-toolbar {
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+
+        tr:hover .action-toolbar {
+            opacity: 1;
+        }
+
+        .btn-group .btn {
+            margin: 0 2px;
+        }
+
+        /* Better mobile experience */
+        @media (max-width: 768px) {
+            body
+
+        {
+            padding-top: 70px;
+        }
+
+        .table td, .table th {
+            font-size: 0.9rem;
+            padding: 8px 4px;
+        }
+
+        }
     </style>
 </head>
 <body>
@@ -49,6 +100,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="CVs" asp-action="Index">All CVs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Stats">Statistics</a>
                         </li>
                     }
 

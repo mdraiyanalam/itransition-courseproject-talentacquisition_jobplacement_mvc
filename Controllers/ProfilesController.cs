@@ -66,6 +66,15 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
+            // Security Check: Prevent editing read-only profiles
+            bool isReadOnly = Request.Form["IsReadOnly"] == "true" ||
+                             (ViewBag.IsReadOnly != null && (bool)ViewBag.IsReadOnly);
+
+            if (isReadOnly)
+            {
+                return Forbid();
+            }
+
             // Profile Photo Upload
             if (profilePhoto != null && profilePhoto.Length > 0)
             {
@@ -112,8 +121,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             // Handle attribute values
             var attributeValues = new Dictionary<int, string>();
-
-            // Text attributes
             foreach (var key in Request.Form.Keys.Where(k => k.StartsWith("attributeValues[")))
             {
                 if (int.TryParse(key.Replace("attributeValues[", "").Replace("]", ""), out int attrId))

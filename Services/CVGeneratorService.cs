@@ -40,7 +40,10 @@ namespace talentacquisition_jobplacement_mvc.Services
                 row.RelativeItem().Column(column =>
                 {
                     column.Item().Text("Curriculum Vitae")
-                        .FontSize(28).Bold().FontColor(Colors.Blue.Darken2);
+                        .FontSize(32).Bold().FontColor(Colors.Blue.Darken2);
+
+                    column.Item().Text("TalentHub Recruitment Platform")
+                        .FontSize(12).FontColor(Colors.Grey.Medium);
                 });
             });
         }
@@ -49,25 +52,25 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.Column(column =>
             {
-                // Header Info
+                // Candidate Info
                 column.Item().PaddingBottom(20).Text(cv.User?.FullName ?? "Candidate")
-                    .FontSize(28).Bold().AlignCenter();
+                    .FontSize(26).Bold().AlignCenter();
 
                 column.Item().Text(cv.User?.Email ?? "").AlignCenter().FontSize(12);
 
                 if (!string.IsNullOrEmpty(cv.Position?.Title))
-                    column.Item().PaddingTop(10).Text($"Applying for: {cv.Position.Title}")
-                        .FontSize(16).Bold().AlignCenter();
+                    column.Item().PaddingTop(8).Text($"Applying for: {cv.Position.Title}")
+                        .FontSize(16).Bold().AlignCenter().FontColor(Colors.Blue.Darken1);
 
                 // Professional Summary
                 if (!string.IsNullOrEmpty(cv.CandidateProfile?.Summary))
                 {
-                    column.Item().PaddingTop(25).Text("PROFESSIONAL SUMMARY").FontSize(14).Bold();
+                    column.Item().PaddingTop(30).Text("PROFESSIONAL SUMMARY").FontSize(14).Bold();
                     column.Item().LineHorizontal(1);
-                    column.Item().Text(cv.CandidateProfile.Summary).FontSize(11).Leading(1.3f);
+                    column.Item().Text(cv.CandidateProfile.Summary).FontSize(11).Leading(1.4f);
                 }
 
-                // Key Qualifications / Attributes (with red highlight)
+                // Key Qualifications / Attributes
                 column.Item().PaddingTop(25).Text("KEY QUALIFICATIONS").FontSize(14).Bold();
                 column.Item().LineHorizontal(1);
 
@@ -77,7 +80,7 @@ namespace talentacquisition_jobplacement_mvc.Services
                     var value = attributeValues.GetValueOrDefault(attr.Id, "");
                     bool isEmpty = string.IsNullOrWhiteSpace(value);
 
-                    column.Item().PaddingTop(8).Row(row =>
+                    column.Item().PaddingTop(6).Row(row =>
                     {
                         row.RelativeItem(4).Text(attr.Name + ":").Bold().FontSize(11);
                         row.RelativeItem(6).Text(isEmpty ? "NOT PROVIDED" : value)
@@ -99,12 +102,12 @@ namespace talentacquisition_jobplacement_mvc.Services
 
                     foreach (var p in projectsToShow)
                     {
-                        column.Item().PaddingTop(12).Text(p.Name).FontSize(12.5f).Bold();
+                        column.Item().PaddingTop(12).Text(p.Name).FontSize(13).Bold();
                         column.Item().Text($"{p.StartDate:MMM yyyy} - {(p.EndDate?.ToString("MMM yyyy") ?? "Present")}")
                             .FontSize(10).FontColor(Colors.Grey.Medium);
 
                         if (!string.IsNullOrEmpty(p.Description))
-                            column.Item().Text(p.Description).FontSize(11);
+                            column.Item().Text(p.Description).FontSize(11).Leading(1.3f);
                     }
                 }
             });

@@ -3,73 +3,106 @@
     ViewData["Title"] = "Platform Statistics";
 }
 
-<h1 class="mb-4">Platform Statistics</h1>
+<h1 class="mb-4">TalentHub Statistics</h1>
 
-<div class="row mb-5 g-3">
+<div class="row g-4 mb-5">
     <div class="col-md-3">
-        <div class="card text-center bg-primary text-white h-100">
+        <div class="card text-center h-100 border-primary shadow-sm">
             <div class="card-body">
-                <h2>@ViewBag.TotalCVs</h2>
-                <p>Total CVs</p>
+                <h2 class="text-primary">@ViewBag.TotalCVs</h2>
+                <p class="text-muted mb-0">Total CVs</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-success text-white h-100">
+        <div class="card text-center h-100 border-success shadow-sm">
             <div class="card-body">
-                <h2>@ViewBag.PublishedCVs</h2>
-                <p>Published CVs</p>
+                <h2 class="text-success">@ViewBag.PublishedCVs</h2>
+                <p class="text-muted mb-0">Published CVs</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-info text-white h-100">
+        <div class="card text-center h-100 border-info shadow-sm">
             <div class="card-body">
-                <h2>@ViewBag.TotalPositions</h2>
-                <p>Active Positions</p>
+                <h2 class="text-info">@ViewBag.TotalPositions</h2>
+                <p class="text-muted mb-0">Job Positions</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center bg-warning text-dark h-100">
+        <div class="card text-center h-100 border-warning shadow-sm">
             <div class="card-body">
-                <h2>@ViewBag.TotalCandidates</h2>
-                <p>Registered Candidates</p>
+                <h2 class="text-warning">@ViewBag.TotalCandidates</h2>
+                <p class="text-muted mb-0">Candidates</p>
             </div>
         </div>
     </div>
 </div>
 
-<h4>Recent Applications</h4>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Candidate</th>
-            <th>Position</th>
-            <th>Applied</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cv in Model)
+<div class="row">
+    <div class="col-md-8">
+        <h5>Recent Applications</h5>
+        @if (Model.Any())
         {
-            <tr>
-                <td>@cv.User?.FullName</td>
-                <td>@cv.Position?.Title</td>
-                <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
-                <td>
-                    @if (cv.IsPublished)
-                    {
-                        <span class="badge bg-success">Published</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Draft</span>
-                    }
-                </td>
-            </tr>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Position</th>
+                            <th>Applied On</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cv in Model)
+                        {
+                            <tr>
+                                <td>@cv.User?.FullName</td>
+                                <td>@cv.Position?.Title</td>
+                                <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>
+                                    @if (cv.IsPublished)
+                                    {
+                                        <span class="badge bg-success">Published</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Draft</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <p class="text-muted">No recent applications yet.</p>
+        }
+    </div>
 
-<a asp-action="Index" class="btn btn-primary">Back to Home</a>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Recruiters</span>
+                        <strong>@ViewBag.TotalRecruiters</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Publish Rate</span>
+                        <strong>@(ViewBag.TotalCVs > 0 ? Math.Round((double)ViewBag.PublishedCVs / ViewBag.TotalCVs * 100) : 0)%</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary mt-4">← Back to Home</a>

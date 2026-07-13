@@ -1,5 +1,4 @@
 ﻿@model List<talentacquisition_jobplacement_mvc.Controllers.UserRoleViewModel>
-
 @{
     ViewData["Title"] = "User Management";
 }
@@ -12,7 +11,7 @@
             <th>Email</th>
             <th>Full Name</th>
             <th>Roles</th>
-            <th>Actions</th>
+            <th class="text-end">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -21,12 +20,14 @@
             <tr>
                 <td>@item.User.Email</td>
                 <td>@item.User.FullName</td>
-                <td>
-                    @string.Join(", ", item.Roles)
-                </td>
-                <td>
-                    <a asp-action="EditRoles" asp-route-id="@item.User.Id"
-                       class="btn btn-sm btn-primary">Edit Roles</a>
+                <td>@string.Join(", ", item.Roles)</td>
+                <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Actions</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" asp-action="EditRoles" asp-route-id="@item.User.Id">Edit Roles</a></li>
+                        </ul>
+                    </div>
                 </td>
             </tr>
         }

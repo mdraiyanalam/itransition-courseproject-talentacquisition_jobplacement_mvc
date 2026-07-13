@@ -28,7 +28,7 @@
     }
 </div>
 
-<!-- Profile Warning for Candidates -->
+<!-- Profile Warning -->
 @if (ViewBag.ProfileIncomplete != null && (bool)ViewBag.ProfileIncomplete)
 {
     <div class="alert alert-warning">
@@ -59,30 +59,51 @@
                     <td>@item.Company</td>
                     <td><span class="badge bg-info">@item.Level</span></td>
                     <td>@item.ProjectTags</td>
-                    <td>
-                        <span class="badge bg-primary">@item.PositionAttributes.Count</span>
-                    </td>
+                    <td><span class="badge bg-primary">@item.PositionAttributes.Count</span></td>
                     <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
                     <td class="text-end">
-                        @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
-                        {
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a asp-action="Duplicate" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-copy"></i>
-                            </a>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
-                                <i class="bi bi-file-earmark-text"></i> (@(item.CVs?.Count ?? 0))
-                            </a>
-                        }
-                        else if (User.IsInRole("Candidate"))
-                        {
-                            <a asp-controller="CVs" asp-action="Create" asp-route-positionId="@item.Id"
-                               class="btn btn-sm btn-success">
-                                <i class="bi bi-arrow-right-circle"></i> Apply
-                            </a>
-                        }
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-action="Edit" asp-route-id="@item.Id">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="Duplicate" asp-route-id="@item.Id">
+                                            <i class="bi bi-copy"></i> Duplicate
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="Details" asp-route-id="@item.Id">
+                                            <i class="bi bi-eye"></i> View Applications (@(item.CVs?.Count ?? 0))
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@item.Id"
+                                           onclick="return confirm('Delete this position and all applications?')">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </li>
+                                }
+                                else if (User.IsInRole("Candidate"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item text-success" asp-controller="CVs" asp-action="Create"
+                                           asp-route-positionId="@item.Id">
+                                            <i class="bi bi-arrow-right-circle"></i> Apply Now
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             }

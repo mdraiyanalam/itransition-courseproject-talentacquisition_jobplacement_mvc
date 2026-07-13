@@ -47,7 +47,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .OrderBy(c => c)
                 .ToListAsync();
 
-            // Recently used attributes
+            // Recently used (last 8)
             ViewBag.RecentAttributes = await _context.PositionAttributes
                 .Include(pa => pa.AttributeDefinition)
                 .GroupBy(pa => pa.AttributeDefinition)

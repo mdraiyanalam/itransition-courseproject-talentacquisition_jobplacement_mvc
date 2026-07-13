@@ -31,20 +31,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
-var facebookAppId = builder.Configuration["Authentication:Facebook:AppId"];
-var facebookAppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
-
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
         options.ClientId = googleClientId;
         options.ClientSecret = googleClientSecret;
     });
-    //.AddFacebook(options =>
-    //{
-    //    options.AppId = facebookAppId;
-    //    options.AppSecret = facebookAppSecret;
-    //});
 
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
 {
@@ -54,15 +46,6 @@ else
 {
     Console.WriteLine("⚠️ Google Authentication is disabled (ClientId/Secret not found).");
 }
-
-//if (!string.IsNullOrEmpty(facebookAppId) && !string.IsNullOrEmpty(facebookAppSecret))
-//{
-//    Console.WriteLine("✅ Facebook Authentication enabled.");
-//}
-//else
-//{
-//    Console.WriteLine("⚠️ Facebook Authentication is disabled (AppId/Secret not found).");
-//}
 
 // MVC Services
 builder.Services.AddControllersWithViews();

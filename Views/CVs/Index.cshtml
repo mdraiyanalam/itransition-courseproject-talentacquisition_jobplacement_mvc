@@ -1,5 +1,4 @@
 ﻿@model IEnumerable<talentacquisition_jobplacement_mvc.Models.CV>
-
 @{
     ViewData["Title"] = "All Applications";
 }
@@ -10,8 +9,7 @@
     <div class="row">
         <div class="col-md-6">
             <div class="input-group">
-                <input type="text" name="searchString" class="form-control"
-                       placeholder="Search candidate or position..." value="@ViewBag.SearchString" />
+                <input type="text" name="searchString" class="form-control" placeholder="Search candidate or position..." value="@ViewBag.SearchString" />
                 <button type="submit" class="btn btn-primary">Search</button>
                 @if (!string.IsNullOrEmpty(ViewBag.SearchString))
                 {
@@ -30,7 +28,8 @@
                 <th>Candidate</th>
                 <th>Position</th>
                 <th>Applied</th>
-                <th>Actions</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -41,8 +40,23 @@
                     <td>@cv.Position?.Title</td>
                     <td>@cv.CreatedAt.ToString("dd MMM yyyy")</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-primary">View</a>
-                        <a asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">PDF</a>
+                        @if (cv.IsPublished)
+                        {
+                            <span class="badge bg-success">Published</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Draft</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Actions</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-action="Details" asp-route-id="@cv.Id">View Details</a></li>
+                                <li><a class="dropdown-item" asp-action="Download" asp-route-id="@cv.Id">Download PDF</a></li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             }

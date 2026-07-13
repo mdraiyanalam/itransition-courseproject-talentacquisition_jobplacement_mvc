@@ -21,13 +21,17 @@
             </div>
         </div>
 
-        <!-- Like -->
-        <form asp-action="ToggleLike" method="post" class="d-inline">
-            <input type="hidden" name="cvId" value="@Model.Id" />
-            <button type="submit" class="btn @(Model.Likes.Any(l => l.UserId == userId) ? "btn-danger" : "btn-outline-danger") mb-3">
-                ❤️ @Model.Likes.Count
-            </button>
-        </form>
+        <!-- Like Button -->
+        <div class="mt-3 mb-4">
+            <form asp-action="ToggleLike" method="post" style="display: inline;">
+                <input type="hidden" name="cvId" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-danger btn-lg" id="likeButton">
+                    <i class="bi bi-heart@(Model.Likes.Any(l => l.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier)) ? "-fill" : "")"></i>
+                    <span id="likeCount">@Model.Likes.Count</span>
+                </button>
+            </form>
+            <small class="text-muted ms-2">people liked this CV</small>
+        </div>
 
         <!-- Publish Controls -->
         @if (canEdit)
@@ -116,34 +120,53 @@
 
 <hr />
 
-<!-- Comments -->
-<h5>Comments (@Model.Comments.Count)</h5>
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <form asp-action="AddComment" method="post" class="mb-4">
-        <input type="hidden" name="cvId" value="@Model.Id" />
-        <div class="input-group">
-            <input type="text" name="message" class="form-control" placeholder="Write a comment..." required />
-            <button type="submit" class="btn btn-primary">Send</button>
+<!-- Comments Section -->
+<div class="mt-5">
+    <h4><i class="bi bi-chat-dots"></i> Comments (@Model.Comments.Count)</h4>
+
+    @if (Model.Comments.Any())
+    {
+        <div class="comments-container">
+            @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+            {
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>@comment.User?.FullName</strong>
+                                <small class="text-muted ms-2">
+                                    @comment.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                                </small>
+                            </div>
+                            @if (User.FindFirstValue(ClaimTypes.NameIdentifier) == comment.UserId)
+                            {
+                                <span class="badge bg-secondary">You</span>
+                            }
+                        </div>
+                        <p class="mt-2 mb-0">@comment.Message</p>
+                    </div>
+                </div>
+            }
         </div>
-    </form>
-}
+    }
+    else
+    {
+        <div class="alert alert-info">No comments yet. Be the first to comment!</div>
+    }
 
-@if (Model.Comments.Any())
-{
-    <div class="list-group">
-        @foreach (var c in Model.Comments.OrderByDescending(x => x.CreatedAt))
-        {
-            <div class="list-group-item">
-                <strong>@c.User?.FullName</strong> <small class="text-muted">@c.CreatedAt.ToString("dd MMM HH:mm")</small>
-                <p class="mb-0">@c.Message</p>
-            </div>
-        }
+    <!-- Add Comment Form -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <form asp-action="AddComment" method="post" id="commentForm">
+                <input type="hidden" name="cvId" value="@Model.Id" />
+                <div class="input-group">
+                    <textarea name="message" class="form-control" rows="2"
+                              placeholder="Write a comment..." required></textarea>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-}
-else
-{
-    <p class="text-muted">No comments yet.</p>
-}
-
-<a asp-action="MyApplications" class="btn btn-secondary mt-4">← Back</a>
+</div>

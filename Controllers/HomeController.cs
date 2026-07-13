@@ -1,11 +1,13 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -27,14 +29,18 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Stats()
         {
             var totalCVs = await _context.CVs.CountAsync();
             var publishedCVs = await _context.CVs.CountAsync(c => c.IsPublished);
             var totalPositions = await _context.Positions.CountAsync();
             var totalCandidates = await _context.Users.CountAsync();
-            var totalRecruiters = await _context.UserRoles.CountAsync(ur => ur.RoleId ==
-                (await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Recruiter")).Id);
+
+            var recruiterRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Recruiter");
+            var totalRecruiters = recruiterRole != null
+                ? await _context.UserRoles.CountAsync(ur => ur.RoleId == recruiterRole.Id)
+                : 0;
 
             var recentCVs = await _context.CVs
                 .Include(c => c.User)
