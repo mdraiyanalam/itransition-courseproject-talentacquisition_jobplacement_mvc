@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
+using talentacquisition_jobplacement_mvc.Resources;
 using talentacquisition_jobplacement_mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +29,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// ==================== Social Authentication ====================
+// Social Authentication
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
@@ -44,12 +46,23 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
 }
 else
 {
-    Console.WriteLine("⚠️ Google Authentication is disabled (ClientId/Secret not found).");
+    Console.WriteLine("⚠️ Google Authentication is disabled.");
 }
 
 // MVC Services
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<CVGeneratorService>();
+
+// ==================== LOCALIZATION ====================
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization(options =>
+    {
+        options.DataAnnotationLocalizerProvider = (type, factory) =>
+            factory.Create(typeof(SharedResources));
+    });
 
 var app = builder.Build();
 
@@ -84,25 +97,34 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Localization Middleware
+var supportedCultures = new[] { "en", "uz" };
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("en"),
+    SupportedCultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList(),
+    SupportedUICultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList()
+};
+
+app.UseRequestLocalization(localizationOptions);
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
-// Fix Google Login Logout Redirect
+// Fix Google Logout
 app.Use(async (context, next) =>
 {
     await next();
-
-    if (context.Request.Path.StartsWithSegments("/Identity/Account/Logout") &&
-        context.Response.StatusCode == 200)
+    if (context.Request.Path.StartsWithSegments("/Identity/Account/Logout") && context.Response.StatusCode == 200)
     {
         context.Response.Redirect("/");
     }
 });
 
-// Ensure upload directories exist
+// Ensure upload directories
 var uploadsRoot = Path.Combine(app.Environment.WebRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "profile-photos"));
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "attributes"));

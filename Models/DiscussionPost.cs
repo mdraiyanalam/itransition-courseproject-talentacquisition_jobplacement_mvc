@@ -5,6 +5,7 @@ namespace talentacquisition_jobplacement_mvc.Models
     public class DiscussionPost
     {
         public int Id { get; set; }
+
         public int PositionId { get; set; }
         public Position Position { get; set; } = null!;
 
@@ -13,6 +14,7 @@ namespace talentacquisition_jobplacement_mvc.Models
 
         [Required]
         public string Message { get; set; } = string.Empty; // Markdown supported
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

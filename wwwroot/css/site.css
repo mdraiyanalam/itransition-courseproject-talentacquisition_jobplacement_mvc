@@ -24,3 +24,48 @@
     font-size: 0.85rem;
     padding: 4px 8px;
 }
+
+/* wwwroot/css/site.css */
+
+body {
+    padding-top: 76px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.45rem;
+}
+
+.comments-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.card {
+    transition: transform 0.2s ease;
+}
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+.btn-outline-danger:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px;
+    }
+
+    .table td,
+    .table th {
+        font-size: 0.9rem;
+        padding: 8px 4px;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+}

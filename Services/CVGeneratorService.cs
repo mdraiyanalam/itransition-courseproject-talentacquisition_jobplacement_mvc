@@ -4,6 +4,7 @@ using QuestPDF.Infrastructure;
 using talentacquisition_jobplacement_mvc.Helpers;
 using talentacquisition_jobplacement_mvc.Models;
 using System.Text.Json;
+using QRCoder;
 
 namespace talentacquisition_jobplacement_mvc.Services
 {
@@ -68,11 +69,10 @@ namespace talentacquisition_jobplacement_mvc.Services
                     column.Item().PaddingTop(30).Text("PROFESSIONAL SUMMARY").FontSize(14).Bold();
                     column.Item().LineHorizontal(1);
                     column.Item().Text(cv.CandidateProfile.Summary)
-                        .FontSize(11)
-                        .LineHeight(1.4f);   // Fixed: Use LineHeight instead of Leading
+                        .FontSize(11).LineHeight(1.4f);
                 }
 
-                // Key Qualifications / Attributes
+                // Key Qualifications
                 column.Item().PaddingTop(25).Text("KEY QUALIFICATIONS").FontSize(14).Bold();
                 column.Item().LineHorizontal(1);
 
@@ -91,7 +91,7 @@ namespace talentacquisition_jobplacement_mvc.Services
                     });
                 }
 
-                // Projects Section
+                // Projects
                 var projectsToShow = cv.CandidateProfile?.Projects
                     .OrderByDescending(p => p.StartDate)
                     .Take(cv.Position?.MaxProjects ?? 4)
@@ -109,11 +109,13 @@ namespace talentacquisition_jobplacement_mvc.Services
                             .FontSize(10).FontColor(Colors.Grey.Medium);
 
                         if (!string.IsNullOrEmpty(p.Description))
-                            column.Item().Text(p.Description)
-                                .FontSize(11)
-                                .LineHeight(1.3f);   // Fixed here too
+                            column.Item().Text(p.Description).FontSize(11).LineHeight(1.3f);
                     }
                 }
+
+                // QR Code
+                column.Item().PaddingTop(30).Text("Scan to View Online").FontSize(10).AlignCenter();
+                column.Item().PaddingTop(5).AlignCenter().Width(120).Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
             });
         }
 
@@ -121,6 +123,14 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.AlignCenter().Text($"Generated on {DateTime.UtcNow:dd MMMM yyyy} | TalentHub Recruitment Platform")
                 .FontSize(9).FontColor(Colors.Grey.Medium);
+        }
+
+        private byte[] GenerateQRCode(string url)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
+            var qrCode = new PngByteQRCode(qrCodeData);
+            return qrCode.GetGraphic(20);
         }
     }
 }
