@@ -15,5 +15,6 @@
 
         public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<CandidateProfileAttribute> ProfileAttributes { get; set; } = new List<CandidateProfileAttribute>();
+        public ICollection<UserAchievement> Achievements { get; set; } = new List<UserAchievement>();
     }
 }

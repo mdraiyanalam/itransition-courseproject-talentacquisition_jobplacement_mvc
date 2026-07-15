@@ -115,7 +115,7 @@ namespace talentacquisition_jobplacement_mvc.Services
 
                 // QR Code
                 column.Item().PaddingTop(30).Text("Scan to View Online").FontSize(10).AlignCenter();
-                column.Item().PaddingTop(5).AlignCenter().Width(120).Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
+                column.Item().PaddingTop(5).AlignCenter().Width(140).Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
             });
         }
 

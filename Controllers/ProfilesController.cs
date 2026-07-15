@@ -237,5 +237,37 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             return View("Index", profile);
         }
+
+        private async Task CheckAndAwardAchievements(ApplicationUser user, CandidateProfile profile)
+        {
+            if (profile.Projects.Count >= 10)
+            {
+                if (!profile.Achievements.Any(a => a.Name == "ProjectMaster"))
+                {
+                    profile.Achievements.Add(new UserAchievement
+                    {
+                        UserId = user.Id,
+                        Name = "ProjectMaster",
+                        Description = "10+ Projects",
+                        Icon = "🏆"
+                    });
+                }
+            }
+
+            var cvCount = await _context.CVs.CountAsync(c => c.UserId == user.Id);
+            if (cvCount >= 5)
+            {
+                if (!profile.Achievements.Any(a => a.Name == "ActiveApplicant"))
+                {
+                    profile.Achievements.Add(new UserAchievement
+                    {
+                        UserId = user.Id,
+                        Name = "ActiveApplicant",
+                        Description = "5+ Applications",
+                        Icon = "📝"
+                    });
+                }
+            }
+        }
     }
 }

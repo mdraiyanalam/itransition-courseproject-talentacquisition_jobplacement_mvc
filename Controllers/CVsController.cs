@@ -289,5 +289,31 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             // Implementation for syncing attributes (can be expanded later)
             await Task.CompletedTask;
         }
+
+        // === EXPORT TO CSV ===
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> ExportToCsv(int positionId)
+        {
+            var cvs = await _context.CVs
+                .Include(c => c.User)
+                .Include(c => c.Position)
+                .Where(c => c.PositionId == positionId)
+                .ToListAsync();
+
+            var sb = new System.Text.StringBuilder();
+
+            // Header
+            sb.AppendLine("Candidate Name,Email,Position Title,Applied Date,Published");
+
+            // Data Rows
+            foreach (var cv in cvs)
+            {
+                sb.AppendLine($"\"{cv.User.FullName}\",\"{cv.User.Email}\",\"{cv.Position.Title}\",{cv.CreatedAt:yyyy-MM-dd HH:mm},{cv.IsPublished}");
+            }
+
+            var fileBytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+
+            return File(fileBytes, "text/csv", $"Position_{positionId}_Applications.csv");
+        }
     }
 }

@@ -192,6 +192,18 @@ else
     }
 }
 
+<h4>Achievements</h4>
+<div class="badges d-flex flex-wrap gap-3">
+    @foreach (var badge in Model.Achievements)
+    {
+        <div class="badge-item border p-3 rounded text-center" style="min-width:120px;">
+            <div style="font-size:2.5rem;">@badge.Icon</div>
+            <strong>@badge.Name</strong>
+            <small class="text-muted d-block">@badge.Description</small>
+        </div>
+    }
+</div>
+
 @if (!isReadOnly)
 {
     <hr class="my-5" />
