@@ -102,8 +102,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                cvs = cvs.Where(c => c.User.FullName.Contains(searchString) ||
-                                     c.Position.Title.Contains(searchString));
+                searchString = searchString.Trim();
+                cvs = cvs.Where(c =>
+                    EF.Functions.Contains(c.AttributeValues, searchString) ||
+                    (c.User.FullName != null && c.User.FullName.Contains(searchString)) ||
+                    (c.Position.Title != null && c.Position.Title.Contains(searchString))
+                );
             }
 
             return View(await cvs.ToListAsync());

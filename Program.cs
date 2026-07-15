@@ -9,15 +9,15 @@ using talentacquisition_jobplacement_mvc.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Get connection string
+// Connection String
 var connectionString = builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
     ?? throw new InvalidOperationException("Connection string 'talentacquisition_jobplacement_mvcContextConnection' not found.");
 
-// Add DbContext
+// DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Add Identity
+// Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -30,7 +30,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Social Authentication (Google)
+// Google Auth
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
@@ -42,22 +42,16 @@ builder.Services.AddAuthentication()
     });
 
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
-{
     Console.WriteLine("✅ Google Authentication enabled.");
-}
 else
-{
     Console.WriteLine("⚠️ Google Authentication is disabled.");
-}
 
-// MVC + Services
+// MVC + Services + SignalR
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<CVGeneratorService>();
-
-// SignalR
 builder.Services.AddSignalR();
 
-// Localization
+// Localization (Fixed & Optimized)
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.AddControllersWithViews()
@@ -101,7 +95,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ==================== LOCALIZATION ====================
+// Localization Middleware - Critical Order
 var supportedCultures = new[] { "en", "uz" };
 var localizationOptions = new RequestLocalizationOptions
 {
@@ -110,15 +104,12 @@ var localizationOptions = new RequestLocalizationOptions
     SupportedUICultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList()
 };
 
-// This is critical - Cookie provider first
 localizationOptions.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
 
 app.UseRequestLocalization(localizationOptions);
-// Routes
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Routes
+app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 app.MapHub<DiscussionHub>("/discussionHub");
 
@@ -132,7 +123,7 @@ app.Use(async (context, next) =>
     }
 });
 
-// Upload directories
+// Upload Directories
 var uploadsRoot = Path.Combine(app.Environment.WebRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "profile-photos"));
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "attributes"));

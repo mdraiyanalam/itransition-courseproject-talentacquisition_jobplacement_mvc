@@ -28,7 +28,7 @@ namespace talentacquisition_jobplacement_mvc.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Position Attributes
+            // === Relationships ===
             modelBuilder.Entity<PositionAttribute>()
                 .HasOne(pa => pa.Position)
                 .WithMany(p => p.PositionAttributes)
@@ -41,14 +41,12 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasForeignKey(pa => pa.AttributeDefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Candidate Profile
             modelBuilder.Entity<CandidateProfile>()
                 .HasOne(cp => cp.User)
                 .WithOne()
                 .HasForeignKey<CandidateProfile>(cp => cp.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // CV
             modelBuilder.Entity<CV>()
                 .HasOne(cv => cv.Position)
                 .WithMany(p => p.CVs)
@@ -67,28 +65,24 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .HasForeignKey(cv => cv.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Projects
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.CandidateProfile)
                 .WithMany(cp => cp.Projects)
                 .HasForeignKey(p => p.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Comments
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.CV)
                 .WithMany(cv => cv.Comments)
                 .HasForeignKey(c => c.CVId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Likes
             modelBuilder.Entity<CVLike>()
                 .HasOne(l => l.CV)
                 .WithMany(cv => cv.Likes)
                 .HasForeignKey(l => l.CVId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Discussion Posts
             modelBuilder.Entity<DiscussionPost>()
                 .HasOne(d => d.Position)
                 .WithMany(p => p.DiscussionPosts)
@@ -100,6 +94,24 @@ namespace talentacquisition_jobplacement_mvc.Data
                 .WithMany()
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // === Indexes (LocalDB Compatible) ===
+            modelBuilder.Entity<Position>()
+                .HasIndex(p => p.Title);
+
+            modelBuilder.Entity<Position>()
+                .HasIndex(p => p.Description);
+
+            modelBuilder.Entity<Position>()
+                .HasIndex(p => p.ProjectTags);
+
+            modelBuilder.Entity<Position>()
+                .HasIndex(p => new { p.Title, p.Description, p.ProjectTags })
+                .HasDatabaseName("IX_Positions_Search");
+
+            modelBuilder.Entity<CV>()
+                .HasIndex("AttributeValues")
+                .HasDatabaseName("IX_CVs_AttributeValues");
         }
     }
 }

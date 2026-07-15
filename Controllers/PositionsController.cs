@@ -10,6 +10,7 @@ using talentacquisition_jobplacement_mvc.Models;
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
     [Authorize]
+    [Authorize]
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,19 +25,22 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public async Task<IActionResult> Index(string searchString)
         {
             var positions = _context.Positions
-                .Include(p => p.PositionAttributes)
-                    .ThenInclude(pa => pa.AttributeDefinition)
+                .Include(p => p.PositionAttributes).ThenInclude(pa => pa.AttributeDefinition)
+                .Include(p => p.CVs)
                 .OrderByDescending(p => p.CreatedAt)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                searchString = searchString.ToLower();
+                searchString = searchString.Trim();
+
                 positions = positions.Where(p =>
-                    p.Title.ToLower().Contains(searchString) ||
-                    (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
-                    (p.Company != null && p.Company.ToLower().Contains(searchString)) ||
-                    (p.ProjectTags != null && p.ProjectTags.ToLower().Contains(searchString))
+                    EF.Functions.Contains(p.Title, searchString) ||
+                    EF.Functions.Contains(p.Description, searchString) ||
+                    EF.Functions.Contains(p.ProjectTags, searchString) ||
+                    (p.Title != null && p.Title.Contains(searchString)) ||
+                    (p.Description != null && p.Description.Contains(searchString)) ||
+                    (p.ProjectTags != null && p.ProjectTags.Contains(searchString))
                 );
             }
 
