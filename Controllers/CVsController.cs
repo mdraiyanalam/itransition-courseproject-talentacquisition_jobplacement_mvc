@@ -219,7 +219,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // POST: Publish CV
         [HttpPost]
-        [Authorize(Roles = "Candidate,Administrator")]
+        [Authorize(Roles = "Candidate,Recruiter,Administrator")]
         public async Task<IActionResult> Publish(int id)
         {
             var cv = await _context.CVs.FindAsync(id);

@@ -10,8 +10,6 @@
     <title>@ViewData["Title"] - TalentHub</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -142,8 +140,9 @@
         }
 
         function changeLanguage(lang) {
-            alert("Language switched to: " + lang + " (Full localization coming soon)");
-            window.location.reload();
+            document.cookie = `.AspNetCore.Culture=c=${lang}|uic=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+            console.log(`🍪 Cookie set for language: ${lang}`);
+            window.location.reload(true);
         }
     </script>
 </body>

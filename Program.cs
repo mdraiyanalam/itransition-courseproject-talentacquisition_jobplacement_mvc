@@ -5,6 +5,7 @@ using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 using talentacquisition_jobplacement_mvc.Resources;
 using talentacquisition_jobplacement_mvc.Services;
+using talentacquisition_jobplacement_mvc.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Social Authentication
+// Social Authentication (Google)
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
@@ -49,11 +50,14 @@ else
     Console.WriteLine("⚠️ Google Authentication is disabled.");
 }
 
-// MVC Services
+// MVC + Services
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<CVGeneratorService>();
 
-// ==================== LOCALIZATION ====================
+// SignalR
+builder.Services.AddSignalR();
+
+// Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.AddControllersWithViews()
@@ -66,10 +70,10 @@ builder.Services.AddControllersWithViews()
 
 var app = builder.Build();
 
-// QuestPDF License
+// QuestPDF
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
-// Seeding Data
+// Seeding
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -97,7 +101,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Localization Middleware
+// ==================== LOCALIZATION ====================
 var supportedCultures = new[] { "en", "uz" };
 var localizationOptions = new RequestLocalizationOptions
 {
@@ -106,15 +110,19 @@ var localizationOptions = new RequestLocalizationOptions
     SupportedUICultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList()
 };
 
-app.UseRequestLocalization(localizationOptions);
+// This is critical - Cookie provider first
+localizationOptions.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
 
+app.UseRequestLocalization(localizationOptions);
+// Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+app.MapHub<DiscussionHub>("/discussionHub");
 
-// Fix Google Logout
+// Google Logout Fix
 app.Use(async (context, next) =>
 {
     await next();
@@ -124,7 +132,7 @@ app.Use(async (context, next) =>
     }
 });
 
-// Ensure upload directories
+// Upload directories
 var uploadsRoot = Path.Combine(app.Environment.WebRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "profile-photos"));
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "attributes"));

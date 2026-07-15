@@ -38,7 +38,7 @@
         </div>
 
         <!-- Publish Controls -->
-        @if (canEdit)
+        @if (canEdit || User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
         {
             <div class="mb-4">
                 @if (Model.IsPublished)

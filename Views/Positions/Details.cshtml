@@ -1,91 +1,154 @@
-﻿@using talentacquisition_jobplacement_mvc.Helpers
-@model talentacquisition_jobplacement_mvc.Models.Position
+﻿@model talentacquisition_jobplacement_mvc.Models.Position
+@using talentacquisition_jobplacement_mvc.Helpers
+
 @{
     ViewData["Title"] = Model.Title;
 }
 
 <h1>@Model.Title</h1>
-<p>@Model.Description</p>
+<p class="lead">@Model.Description</p>
 
-<h4>Applications Received (@Model.CVs.Count)</h4>
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-4" id="positionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+            Overview
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="discussions-tab" data-bs-toggle="tab"
+                data-bs-target="#discussions" type="button" role="tab" aria-controls="discussions" aria-selected="false">
+            Discussions (@(Model.DiscussionPosts?.Count ?? 0))
+        </button>
+    </li>
+</ul>
 
-@if (Model.CVs.Any())
-{
-    <table class="table table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Candidate</th>
-                <th>Applied On</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var cv in Model.CVs.OrderByDescending(c => c.CreatedAt))
+<div class="tab-content" id="positionTabContent">
+
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+        <h4>Applications Received (@(Model.CVs?.Count ?? 0))</h4>
+        <p class="text-muted">Overview content for this position goes here...</p>
+    </div>
+
+    <!-- Discussions Tab -->
+    <div class="tab-pane fade" id="discussions" role="tabpanel" aria-labelledby="discussions-tab">
+        <h4><i class="bi bi-chat-dots"></i> Discussions</h4>
+
+        <div id="discussionContainer" class="border p-3 mb-4 bg-white rounded shadow-sm"
+             style="max-height: 500px; overflow-y: auto;">
+
+            @foreach (var post in Model.DiscussionPosts?.OrderBy(p => p.CreatedAt) ?? Enumerable.Empty<DiscussionPost>())
             {
-                <tr>
-                    <td>@cv.User?.FullName</td>
-                    <td>@cv.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
-                    <td>
-                        @if (cv.IsPublished)
+                <div class="d-flex mb-3">
+                    <div class="flex-grow-1">
+                        @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
                         {
-                            <span class="badge bg-success">Published</span>
+                            <a asp-controller="Profiles" asp-action="ViewProfile" asp-route-userId="@post.UserId" class="fw-bold text-primary">
+                                @post.User?.FullName
+                            </a>
                         }
                         else
                         {
-                            <span class="badge bg-secondary">Draft</span>
+                            <strong>@post.User?.FullName</strong>
                         }
-                    </td>
-                    <td>
-                        <a asp-controller="CVs" asp-action="Details" asp-route-id="@cv.Id" class="btn btn-sm btn-primary">View CV</a>
-                        <a asp-controller="CVs" asp-action="Download" asp-route-id="@cv.Id" class="btn btn-sm btn-success">Download PDF</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-info">No applications yet.</div>
-}
-
-<!-- Discussions Section -->
-<div class="mt-5">
-    <h4><i class="bi bi-chat-dots"></i> Discussions (@(Model.DiscussionPosts?.Count ?? 0))</h4>
-
-    <div id="discussionContainer" class="comments-container border p-3 mb-3 bg-light" style="max-height:500px;overflow-y:auto;">
-        @foreach (var post in Model.DiscussionPosts?.OrderBy(p => p.CreatedAt) ?? Enumerable.Empty<DiscussionPost>())
-        {
-            <div class="d-flex mb-3">
-                <div class="flex-grow-1">
-                    <strong>@post.User?.FullName</strong>
-                    <small class="text-muted ms-2">@post.CreatedAt.ToString("g")</small>
-                    <div class="mt-1">@Html.Raw(MarkdownHelper.ToHtml(post.Message))</div>
+                        <small class="text-muted ms-2">@post.CreatedAt.ToString("g")</small>
+                        <div class="mt-1">@Html.Raw(MarkdownHelper.ToHtml(post.Message))</div>
+                    </div>
                 </div>
-                @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
-                {
-                    <a asp-controller="Profiles" asp-action="ViewProfile" asp-route-userId="@post.UserId" class="btn btn-sm btn-outline-secondary">Profile</a>
-                }
+            }
+
+            @if (!Model.DiscussionPosts?.Any() ?? true)
+            {
+                <p class="text-muted text-center py-4">No comments yet. Be the first to start the discussion!</p>
+            }
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <form id="discussionForm">
+                        <input type="hidden" id="positionId" value="@Model.Id" />
+                        <textarea id="messageInput" class="form-control" rows="3"
+                              placeholder="Write a comment..." style="resize: vertical;"></textarea>
+                        <button type="button" id="postButton" class="btn btn-primary mt-3">
+                            <i class="bi bi-send"></i> Post Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                Please <a asp-area="Identity" asp-page="/Account/Login">log in</a> to participate in discussions.
             </div>
         }
     </div>
-
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <form asp-action="AddDiscussion" method="post">
-            <input type="hidden" name="PositionId" value="@Model.Id" />
-            <textarea name="Message" class="form-control" rows="3" placeholder="Write a comment... (Markdown supported)" required></textarea>
-            <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
-        </form>
-    }
 </div>
 
-<a asp-action="Index" class="btn btn-secondary mt-4">← Back to Positions</a>
-
 @section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script>
-        // Auto-refresh discussions
-        setInterval(() => location.reload(), 8000);
+        let connection;
+
+        async function initializeSignalR() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/discussionHub")
+                    .build();
+
+                connection.on("ReceiveMessage", function (userName, message, timestamp) {
+                    console.log("New message received:", userName, message);
+                    const container = document.getElementById("discussionContainer");
+                    const div = document.createElement("div");
+                    div.className = "d-flex mb-3";
+                    div.innerHTML = `
+                        <div class="flex-grow-1">
+                            <strong>${userName}</strong>
+                            <small class="text-muted ms-2">${timestamp}</small>
+                            <div class="mt-1">${message}</div>
+                        </div>`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                });
+
+                await connection.start();
+                console.log("✅ SignalR Connected successfully!");
+            } catch (err) {
+                console.error("❌ SignalR Connection Failed:", err);
+            }
+        }
+
+        // Post Comment
+        document.getElementById("postButton").addEventListener("click", async () => {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+            const positionId = document.getElementById("positionId").value;
+
+            if (!message) return;
+
+            try {
+                const response = await fetch(`/Positions/AddDiscussion?PositionId=${positionId}&Message=${encodeURIComponent(message)}`, {
+                    method: "POST",
+                    headers: {
+                        "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                if (response.ok) {
+                    messageInput.value = "";
+                    console.log("✅ Comment sent successfully");
+                }
+            } catch (err) {
+                console.error("Failed to post comment:", err);
+                alert("Failed to post comment. Please try again.");
+            }
+        });
+
+        // Initialize SignalR when page loads
+        window.onload = initializeSignalR;
     </script>
 }

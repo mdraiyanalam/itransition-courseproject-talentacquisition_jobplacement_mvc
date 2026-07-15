@@ -1,5 +1,5 @@
 ﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
     {
         Layout = parentLayout.ToString();
     }
@@ -27,3 +27,10 @@
 @section Scripts {
     @RenderSection("Scripts", required: false)
 }
+
+<script>
+    function changeLanguage(lang) {
+        document.cookie = `culture=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+        window.location.reload(true);
+    }
+</script>

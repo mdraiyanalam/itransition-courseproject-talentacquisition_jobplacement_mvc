@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
+using talentacquisition_jobplacement_mvc.Hubs;
 using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
@@ -12,17 +13,19 @@ namespace talentacquisition_jobplacement_mvc.Controllers
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<DiscussionHub> _hubContext;
 
-        public PositionsController(ApplicationDbContext context)
+        public PositionsController(ApplicationDbContext context, IHubContext<DiscussionHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task<IActionResult> Index(string searchString)
         {
             var positions = _context.Positions
                 .Include(p => p.PositionAttributes)
-                .ThenInclude(pa => pa.AttributeDefinition)
+                    .ThenInclude(pa => pa.AttributeDefinition)
                 .OrderByDescending(p => p.CreatedAt)
                 .AsQueryable();
 
@@ -73,8 +76,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             {
                 position.CreatedAt = DateTime.UtcNow;
                 position.UpdatedAt = DateTime.UtcNow;
-
-                // Handle Access Rules
                 position.AccessRules = Request.Form["AccessRulesJson"].ToString() ?? "[]";
 
                 _context.Add(position);
@@ -141,11 +142,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                     existing.ProjectTags = position.ProjectTags;
                     existing.MaxProjects = position.MaxProjects;
                     existing.UpdatedAt = DateTime.UtcNow;
-
-                    // Update Access Rules from form
                     existing.AccessRules = Request.Form["AccessRulesJson"].ToString() ?? existing.AccessRules;
 
-                    // Update attributes
                     _context.PositionAttributes.RemoveRange(existing.PositionAttributes);
 
                     if (selectedAttributes != null && selectedAttributes.Length > 0)
@@ -172,7 +170,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             ViewBag.Attributes = await _context.AttributeDefinitions.OrderBy(a => a.Name).ToListAsync();
             ViewBag.SelectedAttributeIds = selectedAttributes?.ToList() ?? new List<int>();
-
             return View(position);
         }
 
@@ -210,11 +207,27 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _context.Positions.Add(newPosition);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Position duplicated successfully!";
+            TempData["Success"] = "Position duplicated successfully!";
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Add Discussion Post
+        // GET: Position Details
+        public async Task<IActionResult> Details(int id)
+        {
+            var position = await _context.Positions
+                .Include(p => p.PositionAttributes)
+                    .ThenInclude(pa => pa.AttributeDefinition)
+                .Include(p => p.CVs)
+                .Include(p => p.DiscussionPosts)
+                    .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (position == null) return NotFound();
+
+            return View(position);
+        }
+
+        // POST: Add Discussion Post with SignalR
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDiscussion(int PositionId, string Message)
@@ -225,18 +238,24 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 return RedirectToAction(nameof(Details), new { id = PositionId });
             }
 
-            var position = await _context.Positions.FindAsync(PositionId);
-            if (position == null) return NotFound();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(userId);
 
             var discussion = new DiscussionPost
             {
                 PositionId = PositionId,
-                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+                UserId = userId,
                 Message = Message.Trim()
             };
 
             _context.DiscussionPosts.Add(discussion);
             await _context.SaveChangesAsync();
+
+            // Broadcast via SignalR to all clients
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage",
+                user?.FullName ?? "Anonymous",
+                discussion.Message,
+                discussion.CreatedAt.ToString("g"));
 
             TempData["Success"] = "Comment posted successfully!";
             return RedirectToAction(nameof(Details), new { id = PositionId });

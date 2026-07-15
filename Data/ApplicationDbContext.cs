@@ -11,6 +11,7 @@ namespace talentacquisition_jobplacement_mvc.Data
         {
         }
 
+        // DbSets
         public DbSet<ApplicationUser> ApplicationUsers { get; set; } = null!;
         public DbSet<AttributeDefinition> AttributeDefinitions { get; set; } = null!;
         public DbSet<Position> Positions { get; set; } = null!;
