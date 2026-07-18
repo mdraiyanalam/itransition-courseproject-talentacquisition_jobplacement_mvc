@@ -2,7 +2,7 @@
 @using talentacquisition_jobplacement_mvc.Helpers
 
 @{
-    ViewData["Title"] = "TalentHub - Find Your Next Opportunity";
+    ViewData["Title"] = "Talent Acquisition - Find Your Next Opportunity";
     var latest = ViewBag.LatestPositions as List<Position> ?? new List<Position>();
     var popular = ViewBag.PopularPositions as List<Position> ?? new List<Position>();
     var tags = ViewBag.TagCloud as List<dynamic> ?? new List<dynamic>();
@@ -11,16 +11,23 @@
 <!-- Hero Section -->
 <div class="bg-primary text-white py-5 text-center">
     <div class="container">
-        <h1 class="display-4 fw-bold">TalentHub</h1>
+        <h1 class="display-4 fw-bold">Talent Acquisition</h1>
         <p class="lead mb-4">Connecting talented candidates with the right opportunities</p>
+
         <div class="d-flex justify-content-center gap-3">
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-light btn-lg">Get Started</a>
-            <a asp-controller="Positions" asp-action="Index" class="btn btn-outline-light btn-lg">Browse Positions</a>
+            @if (!User.Identity?.IsAuthenticated ?? false)
+            {
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-light btn-lg px-5">Get Started</a>
+            }
+            <a asp-controller="Positions" asp-action="Index" class="btn btn-outline-light btn-lg px-5">
+                Browse Positions
+            </a>
         </div>
     </div>
 </div>
 
 <div class="container my-5">
+
     <!-- Statistics -->
     <div class="row g-3 mb-5">
         <div class="col-md-3">
@@ -78,7 +85,7 @@
             </div>
         </div>
 
-        <!-- Most Popular -->
+        <!-- Most Popular Positions -->
         <div class="col-lg-5">
             <h4 class="mb-3">Most Popular Positions</h4>
             <div class="list-group">
@@ -97,17 +104,27 @@
         </div>
     </div>
 
-    <!-- Tag Cloud -->
+    <!-- Technology Tag Cloud -->
     <div class="mt-5">
-        <h4>Technology Tag Cloud</h4>
-        <div class="d-flex flex-wrap gap-2">
-            @foreach (var item in tags)
-            {
-                <a href="@Url.Action("Index", "Positions", new { searchString = item.Tag })"
-                   class="badge bg-secondary text-decoration-none fs-6 px-3 py-2">
-                    @item.Tag <span class="text-white-50">(@item.Count)</span>
-                </a>
-            }
-        </div>
+        <h4 class="mb-3">Technology Tag Cloud</h4>
+
+        @if (tags.Any())
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var item in tags)
+                {
+                    <a href="@Url.Action("Index", "Positions", new { searchString = item.Tag })"
+                       class="badge bg-primary text-decoration-none px-3 py-2 fw-semibold"
+                       style="font-size: @(13 + Math.Min(item.Count * 2, 18))px;">
+                        @item.Tag
+                        <span class="badge bg-light text-dark ms-1">@item.Count</span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">No technology tags available yet. Create some positions with Project Tags.</p>
+        }
     </div>
 </div>

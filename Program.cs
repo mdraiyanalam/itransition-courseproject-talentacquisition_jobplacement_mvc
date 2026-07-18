@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 using talentacquisition_jobplacement_mvc.Resources;
@@ -34,26 +35,28 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        options.ClientId = googleClientId;
-        options.ClientSecret = googleClientSecret;
-    });
-
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
     Console.WriteLine("✅ Google Authentication enabled.");
+}
 else
+{
     Console.WriteLine("⚠️ Google Authentication is disabled.");
+}
 
 // MVC + Services + SignalR
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<CVGeneratorService>();
 builder.Services.AddSignalR();
 
-// Localization (Fixed & Optimized)
+// Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
 builder.Services.AddControllersWithViews()
     .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
     .AddDataAnnotationsLocalization(options =>
@@ -64,7 +67,7 @@ builder.Services.AddControllersWithViews()
 
 var app = builder.Build();
 
-// QuestPDF
+// QuestPDF License
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
 // Seeding
@@ -74,6 +77,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await SeedData.Initialize(services);
+        Console.WriteLine("✅ Database seeded successfully.");
     }
     catch (Exception ex)
     {
@@ -95,18 +99,29 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Localization Middleware - Critical Order
+// Localization Middleware
 var supportedCultures = new[] { "en", "uz" };
-var localizationOptions = new RequestLocalizationOptions
+
+app.UseRequestLocalization(new RequestLocalizationOptions
 {
-    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("en"),
+    DefaultRequestCulture = new RequestCulture("en"),
     SupportedCultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList(),
     SupportedUICultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList()
-};
+});
 
-localizationOptions.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
-
-app.UseRequestLocalization(localizationOptions);
+// Optional: Add Cookie provider for language persistence
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList(),
+    SupportedUICultures = supportedCultures.Select(c => new System.Globalization.CultureInfo(c)).ToList(),
+    RequestCultureProviders = new List<IRequestCultureProvider>
+    {
+        new CookieRequestCultureProvider(),
+        new QueryStringRequestCultureProvider(),
+        new AcceptLanguageHeaderRequestCultureProvider()
+    }
+});
 
 // Routes
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -123,7 +138,7 @@ app.Use(async (context, next) =>
     }
 });
 
-// Upload Directories
+// Create Upload Directories
 var uploadsRoot = Path.Combine(app.Environment.WebRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "profile-photos"));
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "attributes"));

@@ -8,6 +8,10 @@
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     bool isOwner = userId == Model.UserId;
     bool canEdit = isOwner || User.IsInRole("Administrator");
+    bool isComplete = Model.Position?.PositionAttributes
+         .All(pa => !pa.AttributeDefinition.IsRequired ||
+                     !string.IsNullOrWhiteSpace(attrValues.GetValueOrDefault(pa.AttributeDefinitionId, "")))
+         ?? true;
 }
 
 <h1>CV for <strong>@Model.Position?.Title</strong></h1>
@@ -52,8 +56,16 @@
                 {
                     <form asp-action="Publish" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-success @(IsCVComplete(Model) ? "" : "disabled")">Publish CV</button>
+                        <button type="submit"
+                                class="btn btn-success @(isComplete ? "" : "disabled")"
+                                @(isComplete ? "" : "disabled")>
+                            Publish CV
+                        </button>
                     </form>
+                    @if (!isComplete)
+                    {
+                        <small class="text-danger d-block mt-1">Complete all required attributes to publish.</small>
+                    }
                 }
             </div>
         }
