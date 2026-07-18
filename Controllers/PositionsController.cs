@@ -10,7 +10,6 @@ using talentacquisition_jobplacement_mvc.Models;
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
     [Authorize]
-    [Authorize]
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -97,7 +96,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Position '<b>{position.Title}</b>' created successfully!";
+                TempData["Success"] = $"Position '{position.Title}' created successfully!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -219,15 +218,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var position = await _context.Positions
-                .Include(p => p.PositionAttributes)
-                    .ThenInclude(pa => pa.AttributeDefinition)
-                .Include(p => p.CVs)
-                .Include(p => p.DiscussionPosts)
-                    .ThenInclude(d => d.User)
+                .Include(p => p.PositionAttributes).ThenInclude(pa => pa.AttributeDefinition)
+                .Include(p => p.CVs).ThenInclude(c => c.User)
+                .Include(p => p.DiscussionPosts).ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (position == null) return NotFound();
-
             return View(position);
         }
 
