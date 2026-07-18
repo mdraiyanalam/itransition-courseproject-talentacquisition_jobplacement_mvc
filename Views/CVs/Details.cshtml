@@ -22,10 +22,10 @@
             </div>
         </div>
 
-        <!-- Like Button (Recruiter Only) -->
-        <div class="mt-3 mb-4">
-            @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
-            {
+        <!-- Like Button -->
+        @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+        {
+            <div class="mt-3 mb-4">
                 <form asp-action="ToggleLike" method="post" style="display: inline;">
                     <input type="hidden" name="cvId" value="@Model.Id" />
                     <button type="submit" class="btn btn-outline-danger btn-lg">
@@ -33,12 +33,12 @@
                         <span id="likeCount">@Model.Likes.Count</span>
                     </button>
                 </form>
-            }
-            <small class="text-muted ms-2">Recruiters liked this CV</small>
-        </div>
+                <small class="text-muted ms-2">Recruiters liked this CV</small>
+            </div>
+        }
 
         <!-- Publish Controls -->
-        @if (canEdit || User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+        @if (canEdit)
         {
             <div class="mb-4">
                 @if (Model.IsPublished)
@@ -52,7 +52,7 @@
                 {
                     <form asp-action="Publish" method="post" style="display:inline;">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-success">Publish CV</button>
+                        <button type="submit" class="btn btn-success @(IsCVComplete(Model) ? "" : "disabled")">Publish CV</button>
                     </form>
                 }
             </div>
@@ -73,6 +73,7 @@
                     var attr = pa.AttributeDefinition;
                     var value = attrValues.GetValueOrDefault(attr.Id, "");
                     bool isEmpty = string.IsNullOrWhiteSpace(value);
+
                     <tr>
                         <td><strong>@attr.Name</strong> <small>(@attr.Type)</small></td>
                         <td>
@@ -106,6 +107,7 @@
                     }
                 </div>
             }
+        } }
         }
     </div>
 

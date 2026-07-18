@@ -1,10 +1,10 @@
-﻿using QuestPDF.Fluent;
+﻿// Services/CVGeneratorService.cs
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using talentacquisition_jobplacement_mvc.Helpers;
-using talentacquisition_jobplacement_mvc.Models;
-using System.Text.Json;
 using QRCoder;
+using System.Text.Json;
+using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Services
 {
@@ -12,7 +12,7 @@ namespace talentacquisition_jobplacement_mvc.Services
     {
         public byte[] GenerateCV(CV cv)
         {
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
+            QuestPDF.Settings.License = LicenseType.Evaluation;
 
             var attributeValues = string.IsNullOrEmpty(cv.AttributeValues)
                 ? new Dictionary<int, string>()
@@ -38,12 +38,12 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.Row(row =>
             {
-                row.RelativeItem().Column(column =>
+                row.RelativeItem().Column(col =>
                 {
-                    column.Item().Text("Curriculum Vitae")
-                        .FontSize(32).Bold().FontColor(Colors.Blue.Darken2);
+                    col.Item().Text("Curriculum Vitae")
+                        .FontSize(28).Bold().FontColor(Colors.Blue.Darken2);
 
-                    column.Item().Text("TalentHub Recruitment Platform")
+                    col.Item().Text("TalentHub Recruitment Platform")
                         .FontSize(12).FontColor(Colors.Grey.Medium);
                 });
             });
@@ -53,7 +53,7 @@ namespace talentacquisition_jobplacement_mvc.Services
         {
             container.Column(column =>
             {
-                // Candidate Info
+                // Personal Info
                 column.Item().PaddingBottom(20).Text(cv.User?.FullName ?? "Candidate")
                     .FontSize(26).Bold().AlignCenter();
 
@@ -82,7 +82,7 @@ namespace talentacquisition_jobplacement_mvc.Services
                     var value = attributeValues.GetValueOrDefault(attr.Id, "");
                     bool isEmpty = string.IsNullOrWhiteSpace(value);
 
-                    column.Item().PaddingTop(6).Row(row =>
+                    column.Item().PaddingTop(8).Row(row =>
                     {
                         row.RelativeItem(4).Text(attr.Name + ":").Bold().FontSize(11);
                         row.RelativeItem(6).Text(isEmpty ? "NOT PROVIDED" : value)
@@ -110,12 +110,16 @@ namespace talentacquisition_jobplacement_mvc.Services
 
                         if (!string.IsNullOrEmpty(p.Description))
                             column.Item().Text(p.Description).FontSize(11).LineHeight(1.3f);
+
+                        if (!string.IsNullOrEmpty(p.TechnologyTags))
+                            column.Item().Text($"Technologies: {p.TechnologyTags}").FontSize(10).FontColor(Colors.Blue.Medium);
                     }
                 }
 
                 // QR Code
-                column.Item().PaddingTop(30).Text("Scan to View Online").FontSize(10).AlignCenter();
-                column.Item().PaddingTop(5).AlignCenter().Width(140).Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
+                column.Item().PaddingTop(40).AlignCenter().Text("Scan to View Online Profile").FontSize(10);
+                column.Item().PaddingTop(8).AlignCenter().Width(160)
+                    .Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
             });
         }
 

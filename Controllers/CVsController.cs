@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Controllers/CVsController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
 using talentacquisition_jobplacement_mvc.Data;
-using talentacquisition_jobplacement_mvc.Helpers;
 using talentacquisition_jobplacement_mvc.Models;
 using talentacquisition_jobplacement_mvc.Services;
 
@@ -38,9 +38,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .FirstOrDefaultAsync(cp => cp.UserId == userId);
 
             if (profile == null)
-            {
                 return RedirectToAction("Index", "Profiles");
-            }
 
             var model = new CV
             {
@@ -51,7 +49,9 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 CandidateProfile = profile
             };
 
-            ViewBag.AttributeValues = new Dictionary<int, string>();
+            ViewBag.AttributeValues = profile.ProfileAttributes
+                .ToDictionary(pa => pa.AttributeDefinitionId, pa => pa.Value);
+
             return View(model);
         }
 
@@ -63,17 +63,17 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             cv.UserId = userId;
             cv.CreatedAt = DateTime.UtcNow;
-            cv.AttributeValues = JsonSerializer.Serialize(attributeValues);
+            cv.AttributeValues = JsonSerializer.Serialize(attributeValues ?? new Dictionary<int, string>());
+
+            await SyncCVAttributesToProfile(userId, attributeValues);
 
             if (ModelState.IsValid)
             {
                 _context.CVs.Add(cv);
                 await _context.SaveChangesAsync();
-
                 TempData["Success"] = "Application submitted successfully!";
                 return RedirectToAction("MyApplications");
             }
-
             return View(cv);
         }
 
@@ -91,7 +91,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(applications);
         }
 
-        // GET: All CVs (Recruiter)
+        // GET: All CVs (Recruiter/Admin)
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> Index(string searchString)
         {
@@ -120,12 +120,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var cv = await _context.CVs
                 .Include(c => c.User)
                 .Include(c => c.Position)
-                .ThenInclude(p => p.PositionAttributes)
-                .ThenInclude(pa => pa.AttributeDefinition)
+                    .ThenInclude(p => p.PositionAttributes)
+                    .ThenInclude(pa => pa.AttributeDefinition)
                 .Include(c => c.CandidateProfile)
-                .ThenInclude(cp => cp.Projects)
+                    .ThenInclude(cp => cp.Projects)
                 .Include(c => c.Comments)
-                .ThenInclude(com => com.User)
+                    .ThenInclude(com => com.User)
                 .Include(c => c.Likes)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -137,7 +137,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                   ?? new Dictionary<int, string>();
 
             ViewBag.AttributeValues = attributeValues;
-
             return View(cv);
         }
 
@@ -147,15 +146,33 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         {
             var cv = await _context.CVs
                 .Include(c => c.Position)
+                    .ThenInclude(p => p.PositionAttributes)
+                    .ThenInclude(pa => pa.AttributeDefinition)
+                .Include(c => c.CandidateProfile)
+                    .ThenInclude(cp => cp.ProfileAttributes)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cv == null) return NotFound();
 
-            // Authorization check
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (cv.UserId != userId && !User.IsInRole("Administrator"))
                 return Forbid();
 
+            var attrValues = new Dictionary<int, string>();
+            if (cv.CandidateProfile != null)
+            {
+                foreach (var pa in cv.CandidateProfile.ProfileAttributes)
+                    attrValues[pa.AttributeDefinitionId] = pa.Value;
+            }
+
+            var cvValues = string.IsNullOrEmpty(cv.AttributeValues)
+                ? new Dictionary<int, string>()
+                : JsonSerializer.Deserialize<Dictionary<int, string>>(cv.AttributeValues) ?? new();
+
+            foreach (var kv in cvValues)
+                attrValues[kv.Key] = kv.Value;
+
+            ViewBag.AttributeValues = attrValues;
             return View(cv);
         }
 
@@ -164,24 +181,25 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         [Authorize(Roles = "Candidate,Administrator")]
         public async Task<IActionResult> Edit(int id, CV cv, Dictionary<int, string> attributeValues)
         {
-            var existing = await _context.CVs.FindAsync(id);
+            var existing = await _context.CVs
+                .Include(c => c.CandidateProfile)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (existing == null) return NotFound();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (existing.UserId != userId && !User.IsInRole("Administrator"))
                 return Forbid();
 
-            if (ModelState.IsValid)
-            {
-                existing.AttributeValues = JsonSerializer.Serialize(attributeValues);
-                existing.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+            existing.AttributeValues = JsonSerializer.Serialize(attributeValues ?? new Dictionary<int, string>());
+            existing.UpdatedAt = DateTime.UtcNow;
 
-                TempData["Success"] = "CV updated successfully!";
-                return RedirectToAction(nameof(Details), new { id });
-            }
+            await SyncCVAttributesToProfile(userId, attributeValues);
 
-            return View(cv);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "CV updated successfully!";
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         // GET: Download PDF
@@ -192,13 +210,13 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .Include(c => c.User)
                 .Include(c => c.Position)
                 .Include(c => c.CandidateProfile)
-                .ThenInclude(cp => cp.Projects)
+                    .ThenInclude(cp => cp.Projects)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cv == null) return NotFound();
 
             var pdfBytes = _cvGenerator.GenerateCV(cv);
-            return File(pdfBytes, "application/pdf", $"CV_{cv.User.FullName}.pdf");
+            return File(pdfBytes, "application/pdf", $"CV_{cv.User?.FullName?.Replace(" ", "_") ?? "Candidate"}.pdf");
         }
 
         // POST: Add Comment
@@ -221,13 +239,23 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return RedirectToAction(nameof(Details), new { id = cvId });
         }
 
-        // POST: Publish CV
+        // POST: Publish / Unpublish / ToggleLike (kept as is)
         [HttpPost]
         [Authorize(Roles = "Candidate,Recruiter,Administrator")]
         public async Task<IActionResult> Publish(int id)
         {
-            var cv = await _context.CVs.FindAsync(id);
+            var cv = await _context.CVs
+                .Include(c => c.Position)
+                    .ThenInclude(p => p.PositionAttributes)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (cv == null) return NotFound();
+
+            if (!IsCVComplete(cv))
+            {
+                TempData["Error"] = "Cannot publish: All required attributes must be filled.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             cv.IsPublished = true;
             await _context.SaveChangesAsync();
@@ -236,7 +264,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: Unpublish CV
         [HttpPost]
         [Authorize(Roles = "Candidate,Administrator")]
         public async Task<IActionResult> Unpublish(int id)
@@ -251,7 +278,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: Toggle Like
         [HttpPost]
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> ToggleLike(int cvId)
@@ -259,21 +285,13 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            var existingLike = await _context.CVLikes
+            var existing = await _context.CVLikes
                 .FirstOrDefaultAsync(l => l.CVId == cvId && l.UserId == userId);
 
-            if (existingLike != null)
-            {
-                _context.CVLikes.Remove(existingLike);
-            }
+            if (existing != null)
+                _context.CVLikes.Remove(existing);
             else
-            {
-                _context.CVLikes.Add(new CVLike
-                {
-                    CVId = cvId,
-                    UserId = userId
-                });
-            }
+                _context.CVLikes.Add(new CVLike { CVId = cvId, UserId = userId });
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Details), new { id = cvId });
@@ -281,16 +299,49 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         private bool IsCVComplete(CV cv)
         {
-            return !string.IsNullOrWhiteSpace(cv.AttributeValues) && cv.Position != null;
+            if (cv.Position == null) return false;
+
+            var values = string.IsNullOrEmpty(cv.AttributeValues)
+                ? new Dictionary<int, string>()
+                : JsonSerializer.Deserialize<Dictionary<int, string>>(cv.AttributeValues)
+                  ?? new Dictionary<int, string>();
+
+            foreach (var pa in cv.Position.PositionAttributes)
+            {
+                if (pa.AttributeDefinition.IsRequired &&
+                    string.IsNullOrWhiteSpace(values.GetValueOrDefault(pa.AttributeDefinitionId, "")))
+                    return false;
+            }
+            return true;
         }
 
-        private async Task SyncCVAttributesToProfile(CandidateProfile profile, Dictionary<int, string> attributeValues)
+        private async Task SyncCVAttributesToProfile(string userId, Dictionary<int, string> attributeValues)
         {
-            // Implementation for syncing attributes (can be expanded later)
-            await Task.CompletedTask;
+            var profile = await _context.CandidateProfiles
+                .Include(cp => cp.ProfileAttributes)
+                .FirstOrDefaultAsync(cp => cp.UserId == userId);
+
+            if (profile == null) return;
+
+            foreach (var kv in attributeValues ?? new Dictionary<int, string>())
+            {
+                var existing = profile.ProfileAttributes.FirstOrDefault(pa => pa.AttributeDefinitionId == kv.Key);
+                if (existing != null)
+                    existing.Value = kv.Value ?? "";
+                else
+                {
+                    profile.ProfileAttributes.Add(new CandidateProfileAttribute
+                    {
+                        CandidateProfileId = profile.Id,
+                        AttributeDefinitionId = kv.Key,
+                        Value = kv.Value ?? ""
+                    });
+                }
+            }
+            await _context.SaveChangesAsync();
         }
 
-        // === EXPORT TO CSV ===
+        // Export to CSV
         [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> ExportToCsv(int positionId)
         {
@@ -301,19 +352,14 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .ToListAsync();
 
             var sb = new System.Text.StringBuilder();
-
-            // Header
             sb.AppendLine("Candidate Name,Email,Position Title,Applied Date,Published");
 
-            // Data Rows
             foreach (var cv in cvs)
             {
-                sb.AppendLine($"\"{cv.User.FullName}\",\"{cv.User.Email}\",\"{cv.Position.Title}\",{cv.CreatedAt:yyyy-MM-dd HH:mm},{cv.IsPublished}");
+                sb.AppendLine($"\"{cv.User?.FullName}\",\"{cv.User?.Email}\",\"{cv.Position?.Title}\",{cv.CreatedAt:yyyy-MM-dd HH:mm},{cv.IsPublished}");
             }
 
-            var fileBytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
-
-            return File(fileBytes, "text/csv", $"Position_{positionId}_Applications.csv");
+            return File(System.Text.Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", $"Position_{positionId}_Applications.csv");
         }
     }
 }

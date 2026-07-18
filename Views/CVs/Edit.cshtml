@@ -1,5 +1,4 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.CV
-@using talentacquisition_jobplacement_mvc.Helpers
 @{
     ViewData["Title"] = "Edit CV";
     var attributeValues = ViewBag.AttributeValues as Dictionary<int, string> ?? new Dictionary<int, string>();
@@ -9,7 +8,7 @@
 
 <div class="row">
     <div class="col-md-8">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <form asp-action="Edit" method="post">
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="PositionId" />
 
@@ -29,8 +28,9 @@
                 {
                     var attr = pa.AttributeDefinition;
                     var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
+                    bool isMissing = attr.IsRequired && string.IsNullOrWhiteSpace(currentValue);
 
-                    <div class="mb-4 border p-4 rounded bg-light">
+                    <div class="mb-4 border p-4 rounded @(isMissing ? "border-danger bg-danger bg-opacity-10" : "bg-light")">
                         <label class="form-label fw-bold">
                             @attr.Name
                             @if (attr.IsRequired)
@@ -38,6 +38,10 @@
                                 <span class="text-danger">*</span>
                             }
                         </label>
+                        @if (isMissing)
+                        {
+                            <small class="text-danger d-block mb-2">⚠️ Required - Please fill</small>
+                        }
                         <small class="text-muted d-block mb-2">@attr.Description</small>
 
                         @switch (attr.Type?.ToLower())
@@ -56,11 +60,7 @@
                                 break;
 
                             case "number":
-                                <input type="number"
-                                       name="attributeValues[@attr.Id]"
-                                       class="form-control"
-                                       value="@currentValue"
-                                       placeholder="Enter number" />
+                                <input type="number" name="attributeValues[@attr.Id]" class="form-control" value="@currentValue" />
                                 break;
 
                             case "boolean":
@@ -71,11 +71,8 @@
                                 </select>
                                 break;
 
-                            default: // Text / Textarea
-                                     <textarea name="attributeValues[@attr.Id]"
-                          class="form-control"
-                          rows="4"
-                          placeholder="Enter details...">@currentValue</textarea>
+                            default:
+                                <textarea name="attributeValues[@attr.Id]" class="form-control" rows="4">@currentValue</textarea>
                                 break;
                         }
                     </div>
@@ -88,7 +85,7 @@
 
             <div class="mt-4">
                 <button type="submit" class="btn btn-success btn-lg px-5">
-                    <i class="bi bi-save"></i> Save Changes
+                    <i class="bi bi-save"></i> Save Changes & Sync to Profile
                 </button>
                 <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">Cancel</a>
             </div>
@@ -101,8 +98,8 @@
                 <h6>Quick Tips</h6>
                 <ul class="small">
                     <li>Fill all required fields marked with <span class="text-danger">*</span></li>
-                    <li>Changes will sync with your profile</li>
-                    <li>Click "Publish" after saving to make it visible to recruiters</li>
+                    <li>Changes automatically sync to your master profile</li>
+                    <li>Use "Publish" after saving (only when complete)</li>
                 </ul>
             </div>
         </div>
