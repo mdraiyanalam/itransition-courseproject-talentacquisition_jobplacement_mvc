@@ -34,9 +34,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             }
 
             if (!string.IsNullOrEmpty(categoryFilter))
-            {
                 attributes = attributes.Where(a => a.Category == categoryFilter);
-            }
 
             ViewBag.SearchString = searchString;
             ViewBag.CategoryFilter = categoryFilter;
@@ -47,7 +45,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .OrderBy(c => c)
                 .ToListAsync();
 
-            // Recently used (last 8)
             ViewBag.RecentAttributes = await _context.PositionAttributes
                 .Include(pa => pa.AttributeDefinition)
                 .GroupBy(pa => pa.AttributeDefinition)
