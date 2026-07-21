@@ -30,7 +30,10 @@
 
 <script>
     function changeLanguage(lang) {
-        document.cookie = `culture=${lang}; path=/; max-age=31536000; SameSite=Lax`;
-        window.location.reload(true);
+        // match the main layout and the cookie provider name/format
+        var cookieName = '.AspNetCore.Culture';
+        var cookieValue = 'c=' + lang + '|uic=' + lang;
+        document.cookie = cookieName + '=' + cookieValue + '; path=/; max-age=31536000; SameSite=Lax';
+        window.location.reload();
     }
 </script>

@@ -5,13 +5,13 @@
         public int Id { get; set; }
 
         public int PositionId { get; set; }
-        public Position Position { get; set; } = null!;
+        public Position? Position { get; set; }
 
         public string UserId { get; set; } = string.Empty;
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUser? User { get; set; }
 
         public int CandidateProfileId { get; set; }
-        public CandidateProfile CandidateProfile { get; set; } = null!;
+        public CandidateProfile? CandidateProfile { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

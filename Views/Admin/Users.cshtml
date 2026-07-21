@@ -23,9 +23,22 @@
                 <td>@string.Join(", ", item.Roles)</td>
                 <td class="text-end">
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Actions</button>
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">
+                            Actions
+                        </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" asp-action="EditRoles" asp-route-id="@item.User.Id">Edit Roles</a></li>
+                            <li>
+                                <a class="dropdown-item" asp-action="EditRoles" asp-route-id="@item.User.Id">
+                                    <i class="bi bi-pencil"></i> Edit Roles
+                                </a>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"
+                                        data-user-id="@item.User.Id" data-user-email="@item.User.Email" data-user-name="@item.User.FullName">
+                                    <i class="bi bi-trash"></i> Delete User
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </td>
@@ -33,3 +46,46 @@
         }
     </tbody>
 </table>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the following user?</p>
+        <p><strong id="modalUserEmail"></strong></p>
+        <p id="modalUserFullName" class="text-muted"></p>
+      </div>
+      <div class="modal-footer">
+        <form id="deleteUserForm" method="post" asp-controller="Admin" asp-action="DeleteUserConfirmed">
+          <input type="hidden" name="id" id="modalUserId" />
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var deleteModal = document.getElementById('deleteUserModal');
+        if (!deleteModal) return;
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget;
+          var userId = button.getAttribute('data-user-id');
+          var userEmail = button.getAttribute('data-user-email');
+          var userName = button.getAttribute('data-user-name');
+
+          document.getElementById('modalUserId').value = userId;
+          document.getElementById('modalUserEmail').textContent = userEmail;
+          document.getElementById('modalUserFullName').textContent = userName;
+        });
+      });
+    </script>
+}

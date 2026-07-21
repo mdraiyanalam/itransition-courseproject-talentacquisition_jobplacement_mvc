@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Positions" xml:space="preserve"><value>Positions</value></data>
+  <data name="MyProfile" xml:space="preserve"><value>My Profile</value></data>
+  <data name="MyApplications" xml:space="preserve"><value>My Applications</value></data>
+  <data name="Attributes" xml:space="preserve"><value>Attributes</value></data>
+  <data name="AllCVs" xml:space="preserve"><value>All CVs</value></data>
+  <data name="Statistics" xml:space="preserve"><value>Statistics</value></data>
+  <data name="Users" xml:space="preserve"><value>Users</value></data>
+  <data name="Logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="Login" xml:space="preserve"><value>Login</value></data>
+  <data name="Register" xml:space="preserve"><value>Register</value></data>
+</root>

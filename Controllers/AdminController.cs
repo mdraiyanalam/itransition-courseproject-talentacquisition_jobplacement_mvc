@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 
@@ -17,6 +18,15 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         {
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+
+        // GET: DeleteUserConfirmed - redirect to Users to avoid 404 when accessed directly
+        [HttpGet]
+        public IActionResult DeleteUserConfirmed()
+        {
+            // The POST action performs the deletion. Navigating to this URL by GET should not attempt deletion.
+            // Redirect back to the users list to avoid a 404 and to provide a safer UX.
+            return RedirectToAction(nameof(Users));
         }
 
         // GET: All Users
@@ -52,7 +62,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 UserId = user.Id,
                 Email = user.Email,
                 FullName = user.FullName,
-                CurrentRoles = (List<string>)userRoles,
+                CurrentRoles = userRoles.ToList(),
                 AllRoles = allRoles
             };
 
@@ -61,6 +71,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // POST: Edit User Roles
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditRoles(UserRoleEditViewModel model)
         {
             var user = await _userManager.FindByIdAsync(model.UserId);
@@ -68,10 +79,8 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             var currentRoles = await _userManager.GetRolesAsync(user);
 
-            // Remove all current roles
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
-            // Add selected roles
             if (model.SelectedRoles != null && model.SelectedRoles.Any())
             {
                 await _userManager.AddToRolesAsync(user, model.SelectedRoles);
@@ -79,9 +88,52 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             return RedirectToAction(nameof(Users));
         }
+
+        // GET: Delete Confirmation
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var model = new UserDeleteViewModel
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                FullName = user.FullName
+            };
+
+            return View(model);
+        }
+
+        // POST: Delete User
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUserConfirmed(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.Id == User.FindFirstValue(ClaimTypes.NameIdentifier))
+            {
+                TempData["Error"] = "You cannot delete your own account.";
+                return RedirectToAction(nameof(Users));
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = $"User '{user.Email}' has been deleted successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to delete user.";
+            }
+
+            return RedirectToAction(nameof(Users));
+        }
     }
 
-    // View Models
     public class UserRoleViewModel
     {
         public ApplicationUser User { get; set; } = null!;
@@ -96,5 +148,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public List<string> CurrentRoles { get; set; } = new();
         public List<string> AllRoles { get; set; } = new();
         public List<string> SelectedRoles { get; set; } = new();
+    }
+
+    public class UserDeleteViewModel
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? FullName { get; set; }
     }
 }

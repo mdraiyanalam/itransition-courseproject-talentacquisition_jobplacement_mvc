@@ -119,7 +119,6 @@
                     }
                 </div>
             }
-        } }
         }
     </div>
 
@@ -131,8 +130,8 @@
 
         @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
         {
-            <a asp-action="ExportCVs" asp-route-id="@Model.Id" class="btn btn-success w-100 mb-3">
-                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+            <a asp-action="ExportToCsv" asp-route-positionId="@Model.PositionId" class="btn btn-success w-100 mb-3">
+                <i class="bi bi-file-earmark-excel"></i> Export to CSV
             </a>
         }
 

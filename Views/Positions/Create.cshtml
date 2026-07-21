@@ -1,7 +1,7 @@
 ﻿@model talentacquisition_jobplacement_mvc.Models.Position
 @{
     ViewData["Title"] = "Create New Position";
-    var allAttributes = ViewBag.Attributes as List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>;
+    var allAttributes = ViewBag.Attributes as List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition> ?? new();
 }
 
 <h1>Create New Position</h1>
@@ -36,7 +36,7 @@
             </div>
             <div class="mb-3 mt-3">
                 <label asp-for="MaxProjects" class="form-label">Maximum Projects to show in CV</label>
-                <input asp-for="MaxProjects" type="number" class="form-control" min="1" max="10" />
+                <input asp-for="MaxProjects" type="number" class="form-control" min="1" max="10" value="5" />
             </div>
             <div class="mb-3">
                 <label class="form-label">Preferred Project Tags (comma separated)</label>
@@ -47,31 +47,44 @@
         <!-- Attributes Selection -->
         <div class="col-md-4">
             <h5>Select Attributes</h5>
-            @if (allAttributes != null)
+            @foreach (var attr in allAttributes)
             {
-                foreach (var attr in allAttributes)
-                {
-                    <div class="form-check mb-2">
-                        <input type="checkbox" name="selectedAttributes" value="@attr.Id" class="form-check-input" />
-                        <label class="form-check-label">
-                            @attr.Name <small class="text-muted">(@attr.Type)</small>
-                        </label>
-                    </div>
-                }
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="selectedAttributes" value="@attr.Id" class="form-check-input" />
+                    <label class="form-check-label">
+                        @attr.Name <small class="text-muted">(@attr.Type)</small>
+                    </label>
+                </div>
             }
         </div>
     </div>
 
-    <!-- Access Rules - Improved UI -->
+    <!-- Simple Role-Based Access Rules -->
     <div class="card mt-4">
         <div class="card-header bg-primary text-white">
-            <strong>Access Rules <small>(Killer Feature - Who can apply?)</small></strong>
+            <strong>Who Can Apply?</strong>
         </div>
         <div class="card-body">
-            <div id="rulesContainer"></div>
-            <button type="button" class="btn btn-success btn-sm mt-3" onclick="addRule()">
-                <i class="bi bi-plus-circle"></i> Add Access Rule
-            </button>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="radio" name="AccessRuleType" value="All" id="all" checked class="form-check-input">
+                        <label class="form-check-label" for="all">All Candidates</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="radio" name="AccessRuleType" value="RecruiterOnly" id="recruiter" class="form-check-input">
+                        <label class="form-check-label" for="recruiter">Recruiters Only</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="radio" name="AccessRuleType" value="AdminOnly" id="admin" class="form-check-input">
+                        <label class="form-check-label" for="admin">Administrators Only</label>
+                    </div>
+                </div>
+            </div>
             <input type="hidden" name="AccessRulesJson" id="AccessRulesJson" />
         </div>
     </div>
@@ -84,84 +97,18 @@
 
 @section Scripts {
     <script>
-        let rules = @Html.Raw(Model.AccessRules ?? "[]");
-
-        function addRule() {
-            const container = document.getElementById('rulesContainer');
-            const index = rules.length;
-
-            const ruleHtml = `
-                <div class="border p-3 mb-3 rounded bg-light position-relative" id="rule-${index}">
-                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeRule(${index})"></button>
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <label class="form-label small">Attribute</label>
-                            <select class="form-select" id="attr-${index}" onchange="updateRule(${index})">
-                                <option value="">Select Attribute</option>
-                                @foreach (var attr in allAttributes ?? new List<AttributeDefinition>())
-                                {
-                                        <option value="@attr.Id">@attr.Name (@attr.Type)</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Operator</label>
-                            <select class="form-select" id="op-${index}" onchange="updateRule(${index})">
-                                <option value="=">= Equal</option>
-                                <option value="!=">≠ Not Equal</option>
-                                <option value=">">&gt; Greater Than</option>
-                                <option value="<">&lt; Less Than</option>
-                                <option value=">=">≥ Greater or Equal</option>
-                                <option value="<=">≤ Less or Equal</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Value</label>
-                            <input type="text" class="form-control" id="val-${index}"
-                                   placeholder="Value" onchange="updateRule(${index})" />
-                        </div>
-                    </div>
-                </div>`;
-
-            container.innerHTML += ruleHtml;
-            rules.push({ AttributeDefinitionId: 0, Operator: "=", Value: "", Order: index });
-        }
-
-        function updateRule(index) {
-            rules[index] = {
-                AttributeDefinitionId: parseInt(document.getElementById(`attr-${index}`).value) || 0,
-                Operator: document.getElementById(`op-${index}`).value,
-                Value: document.getElementById(`val-${index}`).value.trim(),
-                Order: index
-            };
-        }
-
-        function removeRule(index) {
-            const element = document.getElementById(`rule-${index}`);
-            if (element) element.remove();
-            rules = rules.filter((_, i) => i !== index);
-        }
-
         document.getElementById('positionForm').addEventListener('submit', function() {
-            document.getElementById('AccessRulesJson').value = JSON.stringify(
-                rules.filter(r => r.AttributeDefinitionId > 0)
-            );
-        });
+            const selectedRule = document.querySelector('input[name="AccessRuleType"]:checked').value;
+            let rules = [];
 
-        window.onload = function() {
-            if (rules.length > 0) {
-                rules.forEach((rule, index) => {
-                    addRule();
-                    setTimeout(() => {
-                        const attrSelect = document.getElementById(`attr-${index}`);
-                        const opSelect = document.getElementById(`op-${index}`);
-                        const valInput = document.getElementById(`val-${index}`);
-                        if (attrSelect) attrSelect.value = rule.AttributeDefinitionId || "";
-                        if (opSelect) opSelect.value = rule.Operator || "=";
-                        if (valInput) valInput.value = rule.Value || "";
-                    }, 150);
-                });
+            if (selectedRule === "RecruiterOnly") {
+                rules = [{ Type: "Role", Value: "Recruiter" }];
+            } else if (selectedRule === "AdminOnly") {
+                rules = [{ Type: "Role", Value: "Administrator" }];
             }
-        };
+            // "All" = empty rules = open to everyone
+
+            document.getElementById('AccessRulesJson').value = JSON.stringify(rules);
+        });
     </script>
 }

@@ -6,53 +6,96 @@
 <h1>Apply for: <span class="text-primary">@Model.Position?.Title</span></h1>
 <p class="lead">@Model.Position?.Description</p>
 
-<form asp-action="Create" method="post">
-    <input type="hidden" asp-for="PositionId" />
+<form asp-action="Create" method="post" id="cvForm">
+    @Html.AntiForgeryToken()
+
+    <!-- Hidden PositionId -->
+    <input type="hidden" name="PositionId" value="@Model.PositionId" />
 
     <h4 class="mt-4">Required Information</h4>
     <div class="row">
-        @if (Model.Position?.PositionAttributes != null)
+        @if (Model.Position?.PositionAttributes != null && Model.Position.PositionAttributes.Any())
         {
             foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
             {
                 var attr = pa.AttributeDefinition;
+
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">
                         @attr.Name @(attr.IsRequired ? "*" : "")
                     </label>
 
-                    @if (attr.Type == "Boolean")
+                    @switch (attr.Type?.ToLower())
                     {
-                        <select name="attributeValues[@attr.Id]" class="form-select">
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    }
-                    else if (attr.Type == "Dropdown" && !string.IsNullOrEmpty(attr.Options))
-                    {
-                        <select name="attributeValues[@attr.Id]" class="form-select">
-                            <option value="">-- Select --</option>
-                            @foreach (var opt in attr.Options.Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
-                            {
-                                <option value="@opt">@opt</option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <input type="text"
-                               name="attributeValues[@attr.Id]"
-                               class="form-control"
-                               placeholder="Enter value..." />
+                        case "boolean":
+                            <select name="attributeValues[@attr.Id]" class="form-select">
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                            break;
+
+                        case "dropdown":
+                            <select name="attributeValues[@attr.Id]" class="form-select">
+                                <option value="">-- Select --</option>
+                                @if (!string.IsNullOrEmpty(attr.Options))
+                                {
+                                    foreach (var opt in attr.Options.Split(',').Select(o => o.Trim()).Where(o => !string.IsNullOrEmpty(o)))
+                                    {
+                                        <option value="@opt">@opt</option>
+                                    }
+                                }
+                            </select>
+                            break;
+
+                        case "number":
+                            <input type="number" name="attributeValues[@attr.Id]" class="form-control" />
+                            break;
+
+                        default:
+                            <input type="text"
+                                   name="attributeValues[@attr.Id]"
+                                   class="form-control"
+                                   placeholder="Enter value..." />
+                            break;
                     }
                 </div>
             }
         }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">No required attributes for this position.</div>
+            </div>
+        }
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-success btn-lg">Submit Application</button>
+        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">Submit Application</button>
         <a asp-controller="Positions" asp-action="Index" class="btn btn-secondary btn-lg">Cancel</a>
     </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger mt-3">
+            <strong>Validation Errors:</strong>
+            <ul>
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
 </form>
+
+@section Scripts {
+    <script>
+        document.getElementById('cvForm').addEventListener('submit', function (e) {
+            console.log("✅ Form is submitting...");
+            var btn = document.getElementById('submitBtn');
+            btn.innerHTML = 'Submitting...';
+            btn.disabled = true;
+        });
+    </script>
+}

@@ -15,6 +15,7 @@ using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
 {
+    [AllowAnonymous]
     public class ResetPasswordModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;

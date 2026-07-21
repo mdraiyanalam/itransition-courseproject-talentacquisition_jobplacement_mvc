@@ -28,13 +28,15 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -42,6 +44,7 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         [BindProperty]
@@ -104,7 +107,18 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
                     _logger.LogInformation("User created a new account with password.");
 
                     // Auto-assign Candidate Role
-                    await _userManager.AddToRoleAsync(user, "Candidate");
+                    const string candidateRole = "Candidate";
+
+                    if (!await _roleManager.RoleExistsAsync(candidateRole))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(candidateRole));
+                    }
+
+                    var roleResult = await _userManager.AddToRoleAsync(user, candidateRole);
+                    if (!roleResult.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to assign Candidate role to user {Email}", Input.Email);
+                    }
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -116,8 +130,48 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    //await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    //    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                    // Replace the existing SendEmailAsync call with this:
+                    await _emailSender.SendEmailAsync(
+                        Input.Email,
+                        "Welcome to TalentHub - Please Confirm Your Email",
+                        $@"
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset='UTF-8'>
+                                <style>
+                                    body {{ font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }}
+                                    .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; }}
+                                    .header {{ background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 30px; text-align: center; }}
+                                    .content {{ padding: 30px; }}
+                                    .btn {{ display: inline-block; background: #2563eb; color: white; padding: 14px 32px; 
+                                             text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }}
+                                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
+                                </style>
+                            </head>
+                            <body>
+                                <div class='container'>
+                                    <div class='header'>
+                                        <h1>TalentHub</h1>
+                                        <p>Talent Acquisition Platform</p>
+                                    </div>
+                                    <div class='content'>
+                                        <h2>Welcome, {Input.FullName ?? "there"}!</h2>
+                                        <p>Thank you for registering with TalentHub. To complete your registration and activate your account, please confirm your email address by clicking the button below:</p>
+                
+                                        <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' class='btn'>✅ Confirm My Email Address</a>
+                
+                                        <p>If you did not create this account, you can safely ignore this email.</p>
+                                    </div>
+                                    <div class='footer'>
+                                        © 2026 TalentHub - Connecting Talent with Opportunity
+                                    </div>
+                                </div>
+                            </body>
+                            </html>");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

@@ -1,0 +1,19 @@
+﻿@model talentacquisition_jobplacement_mvc.Controllers.UserDeleteViewModel
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<h1>Delete User</h1>
+
+<div class="alert alert-danger">
+    <h4>Are you sure you want to delete this user?</h4>
+    <p><strong>Email:</strong> @Model.Email</p>
+    <p><strong>Full Name:</strong> @Model.FullName</p>
+    <p class="text-danger">This action cannot be undone.</p>
+</div>
+
+<form asp-action="DeleteUserConfirmed" method="post">
+    <input type="hidden" asp-for="UserId" />
+    <button type="submit" class="btn btn-danger btn-lg">Yes, Delete User Permanently</button>
+    <a asp-controller="Admin" asp-action="Users" class="btn btn-secondary btn-lg">Cancel</a>
+</form>

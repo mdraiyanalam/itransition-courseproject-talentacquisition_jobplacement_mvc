@@ -4,7 +4,7 @@
 @inject IStringLocalizer<SharedResources> SharedLocalizer
 
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="@CultureInfo.CurrentUICulture.Name" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,11 +22,11 @@
             height: 26px;
         }
 
-            .switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
         .slider {
             position: absolute;
@@ -40,25 +40,25 @@
             border-radius: 34px;
         }
 
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 20px;
-                width: 20px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: .4s;
-                border-radius: 50%;
-            }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
 
         input:checked + .slider {
             background-color: #2196F3;
         }
 
-            input:checked + .slider:before {
-                transform: translateX(24px);
-            }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
     </style>
 </head>
 <body>
@@ -129,11 +129,21 @@
 
                     <!-- Language Selector -->
                     <li class="nav-item">
-                        <select class="form-select form-select-sm"
-                                onchange="changeLanguage(this.value)"
-                                style="width:140px">
-                            <option value="en" selected="@(CultureInfo.CurrentCulture.Name.StartsWith("en"))">🇬🇧 English</option>
-                            <option value="uz" selected="@(CultureInfo.CurrentCulture.Name.StartsWith("uz"))">🇺🇿 O'zbek</option>
+                        @{
+                            var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                        }
+                        <select class="form-select form-select-sm" style="width:140px"
+                                onchange="window.location.href = '/SetCulture?culture=' + this.value + '&returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search)">
+                            @if (currentCulture == "uz")
+                            {
+                                <option value="uz" selected>🇺🇿 O'zbek</option>
+                                <option value="en">🇬🇧 English</option>
+                            }
+                            else
+                            {
+                                <option value="en" selected>🇬🇧 English</option>
+                                <option value="uz">🇺🇿 O'zbek</option>
+                            }
                         </select>
                     </li>
 
@@ -196,13 +206,13 @@
             document.documentElement.setAttribute('data-bs-theme', 'dark');
             document.getElementById('themeToggle').checked = true;
         }
-
-        // Language Switch
-        function changeLanguage(lang) {
-            document.cookie = `.AspNetCore.Culture=c=${lang}|uic=${lang}; path=/; max-age=31536000; SameSite=Lax`;
-            console.log(`🌐 Language switched to: ${lang}`);
-            window.location.reload(true);
-        }
     </script>
+
+    @{ /* debug only */ }
+    <div style="position:fixed;right:0;top:0;background:#fff;padding:6px;z-index:9999;">
+      UI: @System.Globalization.CultureInfo.CurrentUICulture.Name<br/>
+      Culture: @System.Globalization.CultureInfo.CurrentCulture.Name<br/>
+      Positions => @SharedLocalizer["Positions"]
+    </div>
 </body>
 </html>

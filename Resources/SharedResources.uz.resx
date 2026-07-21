@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Positions" xml:space="preserve"><value>Vakansiyalar</value></data>
+  <data name="MyProfile" xml:space="preserve"><value>Mening profilim</value></data>
+  <data name="MyApplications" xml:space="preserve"><value>Mening arizalarim</value></data>
+  <data name="Attributes" xml:space="preserve"><value>Xususiyatlar</value></data>
+  <data name="AllCVs" xml:space="preserve"><value>Barcha CVlar</value></data>
+  <data name="Statistics" xml:space="preserve"><value>Statistika</value></data>
+  <data name="Users" xml:space="preserve"><value>Foydalanuvchilar</value></data>
+  <data name="Logout" xml:space="preserve"><value>Chiqish</value></data>
+  <data name="Login" xml:space="preserve"><value>Kirish</value></data>
+  <data name="Register" xml:space="preserve"><value>Ro'yxatdan o'tish</value></data>
+</root>

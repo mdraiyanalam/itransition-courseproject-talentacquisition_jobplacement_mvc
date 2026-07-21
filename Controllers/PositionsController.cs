@@ -34,11 +34,9 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 searchString = searchString.Trim();
 
                 positions = positions.Where(p =>
-                    EF.Functions.Contains(p.Title, searchString) ||
-                    EF.Functions.Contains(p.Description, searchString) ||
-                    EF.Functions.Contains(p.ProjectTags, searchString) ||
                     (p.Title != null && p.Title.Contains(searchString)) ||
                     (p.Description != null && p.Description.Contains(searchString)) ||
+                    (p.Company != null && p.Company.Contains(searchString)) ||
                     (p.ProjectTags != null && p.ProjectTags.Contains(searchString))
                 );
             }
@@ -67,7 +65,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.Attributes = await _context.AttributeDefinitions.OrderBy(a => a.Name).ToListAsync();
-            return View();
+            return View(new Position());
         }
 
         [HttpPost]

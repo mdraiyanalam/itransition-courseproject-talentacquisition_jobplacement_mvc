@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using talentacquisition_jobplacement_mvc.Resources
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResources> SharedLocalizer
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
@@ -12,13 +14,13 @@
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>
                     <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
-                        My Account
+                        @SharedLocalizer["MyProfile"]
                     </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <form asp-area="Identity" asp-page="/Account/Logout" method="post">
-                        <button type="submit" class="dropdown-item text-danger">Logout</button>
+                        <button type="submit" class="dropdown-item text-danger">@SharedLocalizer["Logout"]</button>
                     </form>
                 </li>
             </ul>
@@ -27,10 +29,10 @@
     else
     {
         <li class="nav-item">
-            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">@SharedLocalizer["Login"]</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">Register</a>
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">@SharedLocalizer["Register"]</a>
         </li>
     }
 </ul>
