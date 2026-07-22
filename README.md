@@ -41,7 +41,40 @@ Password: Admin@123
 
 ---
 
-## Email (SMTP) configuration
+---
+
+## 🔧 Configuration & Setup
+
+### User Secrets (Local Development)
+
+Store sensitive configuration securely using \dotnet user-secrets\:
+
+#### Initialize User Secrets
+
+\\\ash
+dotnet user-secrets init
+\\\
+
+This creates a \.gitignore\'d secrets file in \%APPDATA%\Microsoft\UserSecrets\<project-id>\secrets.json\ (Windows) or \~/.microsoft/usersecrets/<project-id>/secrets.json\ (macOS/Linux).
+
+#### OAuth / Social Login Setup (Optional)
+
+##### Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project
+3. Enable the Google+ API
+4. Create OAuth 2.0 credentials (Web application)
+5. Add redirect URI: \https://localhost:5001/signin-google\ (or your domain)
+6. Store the Client ID and Secret:
+
+\\\ash
+dotnet user-secrets set "Authentication:Google:ClientId" "your-client-id"
+dotnet user-secrets set "Authentication:Google:ClientSecret" "your-client-secret"
+\\\
+
+### Email (SMTP) Configuration
+
 
 The application uses a typed `EmailSettings` class and a simple SMTP-backed `GmailEmailSender`.
 If SMTP credentials are not provided the app falls back to writing email HTML files to `wwwroot/emails` (useful for local development).
@@ -71,6 +104,41 @@ Program.cs performs a startup check and will log a warning when SMTP settings ar
 
 ---
 
+### Database Setup
+
+The application uses **Entity Framework Core** with SQL Server.
+
+#### Create/Update Database
+
+Run migrations to set up the database schema and seed demo data:
+
+\\\ash
+dotnet ef database update
+\\\
+
+This will:
+- Create the database (if it doesn't exist)
+- Apply all pending migrations
+- Seed demo accounts, positions, attributes, and sample data
+
+#### Reset Database (Development)
+
+To delete and recreate the database:
+
+\\\ash
+dotnet ef database drop --force
+dotnet ef database update
+\\\
+
+### Running the Application
+
+\\\ash
+dotnet run
+\\\
+
+The app will start on \https://localhost:5001\ by default.
+
+---
 ## Project Structure
 
 ```
@@ -97,4 +165,9 @@ If you want, I can also:
 
 - Add a short `docs/email.md` describing how to generate a Gmail App Password and test the flow.
 - Add CI step that fails the build if required environment variables are missing (for production).
+
+
+
+
+
 
