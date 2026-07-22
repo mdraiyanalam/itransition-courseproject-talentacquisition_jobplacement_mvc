@@ -72,6 +72,23 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 // Email Sender
 builder.Services.AddSingleton<IEmailSender, GmailEmailSender>();
 
+// Startup-time check for SMTP configuration (do not log secrets)
+{
+    var emailSection = builder.Configuration.GetSection("EmailSettings");
+    var smtpHost = emailSection["SmtpHost"];
+    var smtpUser = emailSection["SmtpUser"];
+    var smtpPass = emailSection["SmtpPass"];
+
+    if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser) || string.IsNullOrWhiteSpace(smtpPass))
+    {
+        Console.WriteLine("⚠️ Email SMTP is not fully configured. The app will fall back to writing emails to wwwroot/emails.\nSet EmailSettings:SmtpHost, EmailSettings:SmtpUser and EmailSettings:SmtpPass using user-secrets or environment variables.");
+    }
+    else
+    {
+        Console.WriteLine($"✅ SMTP configured (host: {smtpHost}). Emails will be sent via SMTP.");
+    }
+}
+
 var app = builder.Build();
 
 // QuestPDF License
@@ -155,5 +172,21 @@ app.Use(async (context, next) =>
 var uploadsRoot = Path.Combine(app.Environment.WebRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "profile-photos"));
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "attributes"));
+
+// Lightweight health endpoint for email readiness (dev-safe)
+app.MapGet("/health/email", (IConfiguration config) =>
+{
+    var section = config.GetSection("EmailSettings");
+    var host = section["SmtpHost"];
+    var user = section["SmtpUser"];
+    var pass = section["SmtpPass"];
+
+    return Results.Json(new
+    {
+        ready = !string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(pass),
+        host = string.IsNullOrWhiteSpace(host) ? null : host,
+        configuredUser = string.IsNullOrWhiteSpace(user) ? (string?)null : (user.Contains("@") ? user : null)
+    });
+});
 
 app.Run();

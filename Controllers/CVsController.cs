@@ -6,6 +6,7 @@ using System.Text.Json;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
 using talentacquisition_jobplacement_mvc.Services;
+using talentacquisition_jobplacement_mvc.Helpers;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
@@ -111,6 +112,33 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 ?? new Dictionary<int, string>();
 
             cv.AttributeValues = JsonSerializer.Serialize(parsed);
+
+            // Enforce access rules: prevent applying if position rules do not allow
+            try
+            {
+                if (position != null)
+                {
+                    var allowed = AccessRuleEvaluator.CanApply(position, profile, parsed);
+                    if (!allowed)
+                    {
+                        ModelState.AddModelError("", "You are not eligible to apply for this position based on access rules.");
+                    }
+                }
+            }
+            catch
+            {
+                // Fail closed: if evaluation errors, prevent application
+                ModelState.AddModelError("", "Unable to evaluate access rules. Application is blocked.");
+            }
+
+            // Prevent duplicate CV for same position by same user
+            var existingCv = await _context.CVs.FirstOrDefaultAsync(c => c.PositionId == cv.PositionId && c.UserId == userId);
+            if (existingCv != null)
+            {
+                // Redirect candidate to edit the existing CV instead of creating a duplicate
+                TempData["Error"] = "You already have an application for this position. You can update it instead.";
+                return RedirectToAction(nameof(Edit), new { id = existingCv.Id });
+            }
 
             await SyncCVAttributesToProfile(userId, parsed);
 

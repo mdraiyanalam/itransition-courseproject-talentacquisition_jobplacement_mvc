@@ -27,6 +27,95 @@ namespace talentacquisition_jobplacement_mvc.Data
                 {
                     await roleManager.CreateAsync(new IdentityRole(roleName));
                 }
+
+            // === RECRUITER USER ===
+            var recruiterEmail = "recruiter@talentacquisition.local";
+            var recruiterUser = await userManager.FindByEmailAsync(recruiterEmail);
+            if (recruiterUser == null)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = recruiterEmail,
+                    Email = recruiterEmail,
+                    FullName = "Demo Recruiter",
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await userManager.CreateAsync(user, "Recruiter@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "Recruiter");
+                }
+            }
+
+            // === CANDIDATE USER ===
+            var candidateEmail = "candidate@talentacquisition.local";
+            var candidateUser = await userManager.FindByEmailAsync(candidateEmail);
+            if (candidateUser == null)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = candidateEmail,
+                    Email = candidateEmail,
+                    FullName = "Demo Candidate",
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await userManager.CreateAsync(user, "Candidate@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "Candidate");
+
+                    // create a candidate profile with sample data
+                    var profile = new CandidateProfile
+                    {
+                        UserId = user.Id,
+                        Summary = "Experienced software developer with a focus on backend systems.",
+                        Experience = "Worked on multiple enterprise projects using .NET and cloud.",
+                        Education = "B.Sc. in Computer Science",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    context.CandidateProfiles.Add(profile);
+                    await context.SaveChangesAsync();
+
+                    // add sample projects
+                    var p1 = new Project
+                    {
+                        CandidateProfileId = profile.Id,
+                        Name = "Inventory System",
+                        StartDate = DateTime.UtcNow.AddYears(-2),
+                        EndDate = DateTime.UtcNow.AddYears(-1),
+                        Description = "Developed inventory management system.",
+                        TechnologyTags = "C#, ASP.NET, SQL",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    var p2 = new Project
+                    {
+                        CandidateProfileId = profile.Id,
+                        Name = "E-commerce Frontend",
+                        StartDate = DateTime.UtcNow.AddYears(-1),
+                        EndDate = null,
+                        Description = "React + TypeScript storefront.",
+                        TechnologyTags = "React, TypeScript, Tailwind",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    context.Projects.AddRange(p1, p2);
+
+                    // award an achievement
+                    profile.Achievements.Add(new UserAchievement
+                    {
+                        UserId = user.Id,
+                        Name = "Starter",
+                        Description = "Seeded account achievement",
+                        Icon = "🎖"
+                    });
+
+                    await context.SaveChangesAsync();
+                }
+            }
             }
 
             // === ADMIN USER ===

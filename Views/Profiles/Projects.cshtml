@@ -100,19 +100,28 @@ else
 <a asp-action="Index" class="btn btn-secondary">← Back to Profile</a>
 
 @section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/@@yaireo/tagify/dist/tagify.css">
+    <script src="https://unpkg.com/@@yaireo/tagify"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const tagInput = document.getElementById('techTags');
-            tagInput.addEventListener('keypress', function (e) {
-                if (e.key === ',' || e.key === 'Enter') {
-                    e.preventDefault();
-                    let value = this.value.trim();
-                    if (value) this.value = '';
-                }
+            var input = document.getElementById('techTags');
+            var tagify = new Tagify(input, {
+                whitelist: [],
+                dropdown: {
+                    enabled: 1,
+                    maxItems: 20
+                },
+                // allow JSON pastes
+                transformTag: function(tagData){ return tagData; }
             });
-            tagInput.addEventListener('blur', function () {
-                this.value = this.value.trim();
-            });
+
+            // Load suggestions from server
+            fetch('/Profiles/TagSuggestions')
+                .then(res => res.json())
+                .then(tags => {
+                    tagify.settings.whitelist = tags;
+                })
+                .catch(() => { /* ignore */ });
         });
     </script>
 }

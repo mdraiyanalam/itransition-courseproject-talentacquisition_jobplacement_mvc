@@ -191,6 +191,118 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             return View(profile?.Projects ?? new List<Project>());
         }
 
+        // GET: Edit Project
+        public async Task<IActionResult> EditProject(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var project = await _context.Projects
+                .Include(p => p.CandidateProfile)
+                .ThenInclude(cp => cp.User)
+                .FirstOrDefaultAsync(p => p.Id == id && p.CandidateProfile.UserId == userId);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            return View(project);
+        }
+
+        // POST: Edit Project
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProject(Project model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var project = await _context.Projects
+                .Include(p => p.CandidateProfile)
+                .FirstOrDefaultAsync(p => p.Id == model.Id && p.CandidateProfile.UserId == userId);
+
+            if (project == null) return NotFound();
+
+            project.Name = model.Name;
+            project.StartDate = model.StartDate;
+            project.EndDate = model.EndDate;
+            project.Description = model.Description;
+            // Normalize tags - accept JSON-like or comma-separated
+            if (!string.IsNullOrWhiteSpace(model.TechnologyTags) && model.TechnologyTags.TrimStart().StartsWith("["))
+            {
+                // simple JSON array of objects like [{"value":"ASP.NET"},{"value":"SSMS"}]
+                try
+                {
+                    var values = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(model.TechnologyTags);
+                    if (values != null)
+                    {
+                        project.TechnologyTags = string.Join(", ", values.Select(v => v.GetValueOrDefault("value")?.Trim()).Where(s => !string.IsNullOrEmpty(s)));
+                    }
+                }
+                catch
+                {
+                    // fallback: keep raw
+                    project.TechnologyTags = model.TechnologyTags;
+                }
+            }
+            else
+            {
+                project.TechnologyTags = model.TechnologyTags;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Project updated successfully.";
+            return RedirectToAction(nameof(Projects));
+        }
+
+        // API endpoints for attribute suggestions / recent
+        [HttpGet]
+        public async Task<IActionResult> AttributeSuggest(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q)) return Json(new object[0]);
+
+            var query = q.Trim().ToLower();
+            var results = await _context.AttributeDefinitions
+                .Where(a => a.Name.ToLower().Contains(query) || (a.Description != null && a.Description.ToLower().Contains(query)))
+                .OrderBy(a => a.Name)
+                .Take(12)
+                .Select(a => new { a.Id, a.Name, a.Category, a.Type })
+                .ToListAsync();
+
+            return Json(results);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AttributeRecent()
+        {
+            var recent = await _context.PositionAttributes
+                .Include(pa => pa.AttributeDefinition)
+                .GroupBy(pa => pa.AttributeDefinitionId)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.First().AttributeDefinition)
+                .Take(8)
+                .Select(a => new { a.Id, a.Name, a.Category, a.Type })
+                .ToListAsync();
+
+            return Json(recent);
+        }
+
+        // GET: Tag suggestions used by Tagify on the Projects form
+        [HttpGet]
+        public async Task<IActionResult> TagSuggestions()
+        {
+            var tagStrings = await _context.Projects
+                .Where(p => !string.IsNullOrEmpty(p.TechnologyTags))
+                .Select(p => p.TechnologyTags)
+                .ToListAsync();
+
+            var tags = tagStrings
+                .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrEmpty(t))
+                .Distinct()
+                .ToList();
+
+            return Json(tags);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SaveProject(Project project)
         {
@@ -199,6 +311,22 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             if (profile == null) return NotFound();
 
             project.CandidateProfileId = profile.Id;
+            // normalize tags
+            if (!string.IsNullOrWhiteSpace(project.TechnologyTags) && project.TechnologyTags.TrimStart().StartsWith("["))
+            {
+                try
+                {
+                    var values = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(project.TechnologyTags);
+                    if (values != null)
+                    {
+                        project.TechnologyTags = string.Join(", ", values.Select(v => v.GetValueOrDefault("value")?.Trim()).Where(s => !string.IsNullOrEmpty(s)));
+                    }
+                }
+                catch
+                {
+                    // ignore, keep original
+                }
+            }
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 

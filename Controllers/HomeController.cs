@@ -35,16 +35,24 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            // Tag Cloud
-            var allTags = await _context.Positions
+            // Tag Cloud - aggregate from Positions and Projects
+            var positionTags = await _context.Positions
                 .Where(p => !string.IsNullOrEmpty(p.ProjectTags))
                 .Select(p => p.ProjectTags)
                 .ToListAsync();
 
+            var projectTags = await _context.Projects
+                .Where(p => !string.IsNullOrEmpty(p.TechnologyTags))
+                .Select(p => p.TechnologyTags)
+                .ToListAsync();
+
+            var allTags = positionTags.Concat(projectTags).ToList();
+
             var tagCloud = allTags
                 .SelectMany(tags => tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 .Select(t => t.Trim())
-                .GroupBy(t => t)
+                .Where(t => !string.IsNullOrEmpty(t))
+                .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new { Tag = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(15)

@@ -9,7 +9,6 @@ using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [Authorize]
     public class PositionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,6 +20,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             _hubContext = hubContext;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Index(string searchString)
         {
             var positions = _context.Positions
@@ -213,6 +213,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: Position Details
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             var position = await _context.Positions
@@ -223,6 +224,29 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             if (position == null) return NotFound();
             return View(position);
+        }
+
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var position = await _context.Positions.FirstOrDefaultAsync(p => p.Id == id);
+            if (position == null) return NotFound();
+            return View(position);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var position = await _context.Positions.FindAsync(id);
+            if (position != null)
+            {
+                _context.Positions.Remove(position);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Position deleted.";
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Add Discussion Post with SignalR

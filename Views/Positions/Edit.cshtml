@@ -105,7 +105,7 @@
                                 <option value="">Select Attribute</option>
                                 @foreach (var attr in allAttributes ?? new List<AttributeDefinition>())
                                 {
-                                        <option value="@attr.Id">@attr.Name (@attr.Type)</option>
+                                        <option value="@attr.Id" data-type="@attr.Type">@attr.Name (@attr.Type)</option>
                                 }
                             </select>
                         </div>
@@ -130,6 +130,24 @@
 
             container.innerHTML += ruleHtml;
             rules.push({ AttributeDefinitionId: 0, Operator: "=", Value: "", Order: index });
+
+            // attach attribute type watcher to adjust operator options
+            setTimeout(() => {
+                const attrSelect = document.getElementById(`attr-${index}`);
+                const opSelect = document.getElementById(`op-${index}`);
+                if (attrSelect) {
+                    attrSelect.addEventListener('change', function () {
+                        const selected = this.options[this.selectedIndex];
+                        const type = (selected && selected.dataset && selected.dataset.type) ? selected.dataset.type.toLowerCase() : 'text';
+                        // adjust operators for type
+                        opSelect.innerHTML = '';
+                        // common operators
+                        const add = (val, txt) => { const o = document.createElement('option'); o.value = val; o.text = txt; opSelect.appendChild(o); };
+                        add('=', '= Equal'); add('!=', '≠ Not Equal');
+                        if (type === 'number' || type === 'date') { add('>', '> Greater Than'); add('<', '< Less Than'); add('>=', '≥ Greater or Equal'); add('<=', '≤ Less or Equal'); }
+                    });
+                }
+            }, 80);
         }
 
         function updateRule(index) {

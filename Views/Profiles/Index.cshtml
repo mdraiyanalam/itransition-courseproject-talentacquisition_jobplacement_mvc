@@ -66,6 +66,13 @@
 
         <h4>Additional Attributes</h4>
         <div class="row mb-4">
+            <div class="col-12 mb-3">
+                <label class="form-label">Quick Find Attributes</label>
+                <input id="attrSearch" class="form-control" placeholder="Search attributes by name or description..." />
+                <div id="attrSuggestions" class="mt-2 d-flex flex-wrap gap-2"></div>
+                <div id="recentAttributes" class="mt-3 d-flex flex-wrap gap-2"></div>
+            </div>
+
             @foreach (var attr in allAttributes)
             {
                 var profileAttr = Model.ProfileAttributes?.FirstOrDefault(pa => pa.AttributeDefinitionId == attr.Id);
@@ -80,6 +87,58 @@
                             <strong>@attr.Name</strong> <small class="text-muted">(@attr.Type)</small>
                         </label>
                     </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const input = document.getElementById('attrSearch');
+                const sugg = document.getElementById('attrSuggestions');
+                const recent = document.getElementById('recentAttributes');
+
+                let timeout = null;
+                input.addEventListener('input', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        const q = this.value.trim();
+                        if (!q) { sugg.innerHTML = ''; return; }
+                        fetch('/Profiles/AttributeSuggest?q=' + encodeURIComponent(q))
+                            .then(r => r.json())
+                            .then(items => {
+                                sugg.innerHTML = '';
+                                items.forEach(it => {
+                                    const btn = document.createElement('button');
+                                    btn.type = 'button';
+                                    btn.className = 'btn btn-sm btn-outline-primary';
+                                    btn.textContent = it.name;
+                                    btn.onclick = () => {
+                                        // find checkbox and toggle
+                                        const cb = document.querySelector('input[name="selectedAttributeIds"][value="' + it.id + '"]');
+                                        if (cb) cb.checked = true;
+                                    };
+                                    sugg.appendChild(btn);
+                                });
+                            });
+                    }, 250);
+                });
+
+                // load recent
+                fetch('/Profiles/AttributeRecent')
+                    .then(r => r.json())
+                    .then(items => {
+                        recent.innerHTML = '';
+                        items.forEach(it => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm btn-outline-secondary';
+                            btn.textContent = it.name;
+                            btn.onclick = () => {
+                                const cb = document.querySelector('input[name="selectedAttributeIds"][value="' + it.id + '"]');
+                                if (cb) cb.checked = true;
+                            };
+                            recent.appendChild(btn);
+                        });
+                    });
+            });
+        </script>
 
                     <div class="ms-4">
                         @switch (attr.Type?.ToLower())

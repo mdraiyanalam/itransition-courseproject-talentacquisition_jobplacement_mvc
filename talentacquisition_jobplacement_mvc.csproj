@@ -29,6 +29,7 @@
     <Folder Include="Resources\Views\Home\" />
     <Folder Include="Resources\Views\CVs\" />
     <Folder Include="Resources\Views\Positions\" />
+    <Folder Include="tests\talentacquisition_jobplacement_mvc.Tests\" />
   </ItemGroup>
 
 </Project>
