@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -22,7 +22,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: Apply to Position
-        [Authorize(Roles = "Candidate,Revuiter")]
+        [Authorize(Roles = "Candidate")]
         public async Task<IActionResult> Create(int positionId)
         {
             var position = await _context.Positions
@@ -307,7 +307,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // POST: Add Comment
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Candidate,Recruiter,Administrator")]
         public async Task<IActionResult> AddComment(int cvId, string message)
         {
             if (string.IsNullOrWhiteSpace(message)) return BadRequest();
@@ -448,3 +448,4 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
     }
 }
+
