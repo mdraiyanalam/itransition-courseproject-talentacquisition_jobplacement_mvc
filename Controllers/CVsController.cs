@@ -266,9 +266,11 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         // POST: Edit CV
         [HttpPost]
         [Authorize(Roles = "Candidate,Administrator")]
-        public async Task<IActionResult> Edit(int id, CV cv, Dictionary<int, string> attributeValues)
+        public async Task<IActionResult> Edit(int id, CV cv, Dictionary<int, string> attributeValues, string? action = null)
         {
             var existingCv = await _context.CVs
+                .Include(c => c.Position)
+                    .ThenInclude(p => p.PositionAttributes)
                 .Include(c => c.CandidateProfile)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -281,10 +283,33 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             existingCv.AttributeValues = JsonSerializer.Serialize(attributeValues ?? new Dictionary<int, string>());
             existingCv.UpdatedAt = DateTime.UtcNow;
 
+            // If trying to publish, validate completeness
+            if (action?.ToLower() == "publish")
+            {
+                if (!IsCVComplete(existingCv))
+                {
+                    TempData["Error"] = "Cannot publish: All required attributes must be filled.";
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+                existingCv.IsPublished = true;
+            }
+            else if (action?.ToLower() == "unpublish")
+            {
+                existingCv.IsPublished = false;
+            }
+            // If just saving, keep current publish status
+
             await SyncCVAttributesToProfile(userId, attributeValues);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "CV updated successfully!";
+            if (action?.ToLower() == "publish")
+                TempData["Success"] = "CV published successfully!";
+            else if (action?.ToLower() == "unpublish")
+                TempData["Success"] = "CV unpublished.";
+            else
+                TempData["Success"] = "CV updated successfully!";
+
             return RedirectToAction(nameof(Details), new { id });
         }
 
