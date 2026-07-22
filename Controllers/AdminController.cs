@@ -132,6 +132,81 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             return RedirectToAction(nameof(Users));
         }
+
+        // POST: Block User
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BlockUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.Id == User.FindFirstValue(ClaimTypes.NameIdentifier))
+            {
+                TempData["Error"] = "You cannot block your own account.";
+                return RedirectToAction(nameof(Users));
+            }
+
+            if (user.IsBlocked)
+            {
+                TempData["Warning"] = $"User '{user.Email}' is already blocked.";
+                return RedirectToAction(nameof(Users));
+            }
+
+            user.IsBlocked = true;
+            user.BlockedAt = DateTime.UtcNow;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = $"User '{user.Email}' has been blocked.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to block user.";
+            }
+
+            return RedirectToAction(nameof(Users));
+        }
+
+        // POST: Unblock User
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnblockUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (!user.IsBlocked)
+            {
+                TempData["Warning"] = $"User '{user.Email}' is not blocked.";
+                return RedirectToAction(nameof(Users));
+            }
+
+            user.IsBlocked = false;
+            user.UnblockedAt = DateTime.UtcNow;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = $"User '{user.Email}' has been unblocked.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to unblock user.";
+            }
+
+            return RedirectToAction(nameof(Users));
+        }
+
+        // GET: View User Profile
+        public async Task<IActionResult> ViewProfile(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            return View(user);
+        }
     }
 
     public class UserRoleViewModel

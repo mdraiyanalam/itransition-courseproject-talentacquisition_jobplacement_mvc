@@ -1,0 +1,171 @@
+@model talentacquisition_jobplacement_mvc.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary">
+                    <h4 class="text-white mb-0"><i class="bi bi-person"></i> User Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Full Name:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.FullName
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.Email
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>User ID:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            <code>@Model.Id</code>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Email Confirmed:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (Model.EmailConfirmed)
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning"><i class="bi bi-exclamation-circle"></i> No</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Account Status:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (Model.IsBlocked)
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> Blocked</span>
+                                @if (Model.BlockedAt.HasValue)
+                                {
+                                    <small class="text-muted d-block">Blocked: @Model.BlockedAt.Value.ToString("MMMM d, yyyy HH:mm:ss")</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Active</span>
+                                @if (Model.UnblockedAt.HasValue)
+                                {
+                                    <small class="text-muted d-block">Unblocked: @Model.UnblockedAt.Value.ToString("MMMM d, yyyy HH:mm:ss")</small>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Created:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.CreatedAt.ToString("MMMM d, yyyy HH:mm:ss")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Phone:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Not provided" : Model.PhoneNumber)
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Last Login:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            <em class="text-muted">Not tracked in current system</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info">
+                    <h6 class="text-white mb-0"><i class="bi bi-gear"></i> Actions</h6>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("EditRoles", "Admin", new { id = Model.Id })" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-lock"></i> Manage Roles
+                    </a>
+
+                    @if (Model.IsBlocked)
+                    {
+                        <form method="post" action="@Url.Action("UnblockUser", "Admin")" style="display: inline-block; width: 100%;">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning w-100 mb-2" onclick="return confirm('Unblock this user?')">
+                                <i class="bi bi-unlock-fill"></i> Unblock User
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post" action="@Url.Action("BlockUser", "Admin")" style="display: inline-block; width: 100%;">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger w-100 mb-2" onclick="return confirm('Block this user?')">
+                                <i class="bi bi-lock-fill"></i> Block User
+                            </button>
+                        </form>
+                    }
+
+                    <a href="@Url.Action("DeleteUser", "Admin", new { id = Model.Id })" class="btn btn-danger w-100">
+                        <i class="bi bi-trash"></i> Delete User
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-secondary">
+                    <h6 class="text-white mb-0"><i class="bi bi-info-circle"></i> Info</h6>
+                </div>
+                <div class="card-body small">
+                    <p class="text-muted mb-2">
+                        <strong>Account ID:</strong><br />
+                        <code style="font-size: 0.8rem;">@Model.Id</code>
+                    </p>
+                    <p class="text-muted mb-0">
+                        Click "Manage Roles" to assign or remove roles. Use "Block User" to temporarily disable access.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="@Url.Action("Users", "Admin")" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>

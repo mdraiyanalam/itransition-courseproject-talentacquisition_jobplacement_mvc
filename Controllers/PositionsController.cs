@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -250,6 +250,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // POST: Add Discussion Post with SignalR
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDiscussion(int PositionId, string Message)

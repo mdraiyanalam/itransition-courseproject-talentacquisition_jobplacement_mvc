@@ -12,95 +12,207 @@
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="PositionId" />
 
-            <!-- Candidate Info -->
-            <div class="card mb-4">
+            <!-- Candidate Info Card -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary">
+                    <h5 class="text-white mb-0"><i class="bi bi-person-circle"></i> Candidate Information</h5>
+                </div>
                 <div class="card-body">
-                    <h5>@Model.User?.FullName</h5>
-                    <p class="text-muted">@Model.User?.Email</p>
+                    <h6>@Model.User?.FullName</h6>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-envelope"></i> @Model.User?.Email
+                    </p>
                 </div>
             </div>
 
-            <h4 class="mb-3">Fill Required Information</h4>
+            <!-- Application Status -->
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> <strong>Application Status:</strong>
+                <span class="badge bg-info">Submitted on @Model.CreatedAt.ToString("MMMM d, yyyy")</span>
+            </div>
+
+            <!-- Required Information Section -->
+            <h4 class="mb-4 mt-4">
+                <i class="bi bi-file-earmark-text"></i> Required Information
+                <small class="text-muted d-block">Fields marked with <span class="text-danger">*</span> must be completed</small>
+            </h4>
 
             @if (Model.Position?.PositionAttributes != null && Model.Position.PositionAttributes.Any())
             {
-                foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
-                {
-                    var attr = pa.AttributeDefinition;
-                    var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
-                    bool isMissing = attr.IsRequired && string.IsNullOrWhiteSpace(currentValue);
+                <div id="attributeFormContainer">
+                    @foreach (var pa in Model.Position.PositionAttributes.OrderBy(x => x.Order))
+                    {
+                        var attr = pa.AttributeDefinition;
+                        var currentValue = attributeValues.GetValueOrDefault(attr.Id, "");
+                        bool isMissing = attr.IsRequired && string.IsNullOrWhiteSpace(currentValue);
 
-                    <div class="mb-4 border p-4 rounded @(isMissing ? "border-danger bg-danger bg-opacity-10" : "bg-light")">
-                        <label class="form-label fw-bold">
-                            @attr.Name
-                            @if (attr.IsRequired)
-                            {
-                                <span class="text-danger">*</span>
-                            }
-                        </label>
-                        @if (isMissing)
-                        {
-                            <small class="text-danger d-block mb-2">⚠️ Required - Please fill</small>
-                        }
-                        <small class="text-muted d-block mb-2">@attr.Description</small>
-
-                        @switch (attr.Type?.ToLower())
-                        {
-                            case "dropdown":
-                                <select name="attributeValues[@attr.Id]" class="form-select">
-                                    <option value="">-- Select --</option>
-                                    @if (!string.IsNullOrEmpty(attr.Options))
+                        <div class="card mb-3 attribute-field @(isMissing ? "border-danger" : "")" data-attr-id="@attr.Id">
+                            <div class="card-body">
+                                <label class="form-label fw-bold mb-2">
+                                    @attr.Name
+                                    @if (attr.IsRequired)
                                     {
-                                        foreach (var option in attr.Options.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
-                                        {
-                                            <option value="@option" selected="@(currentValue == option)">@option</option>
-                                        }
+                                        <span class="text-danger" title="Required field">*</span>
                                     }
-                                </select>
-                                break;
+                                </label>
 
-                            case "number":
-                                <input type="number" name="attributeValues[@attr.Id]" class="form-control" value="@currentValue" />
-                                break;
+                                @if (isMissing)
+                                {
+                                    <div class="alert alert-danger py-2 mb-2" role="alert">
+                                        <i class="bi bi-exclamation-triangle"></i> <strong>Required:</strong> Please fill this field
+                                    </div>
+                                }
 
-                            case "boolean":
-                                <select name="attributeValues[@attr.Id]" class="form-select">
-                                    <option value="">-- Select --</option>
-                                    <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
-                                    <option value="No" selected="@(currentValue == "No")">No</option>
-                                </select>
-                                break;
+                                @if (!string.IsNullOrEmpty(attr.Description))
+                                {
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-info-circle"></i> @attr.Description
+                                    </p>
+                                }
 
-                            default:
-                                <textarea name="attributeValues[@attr.Id]" class="form-control" rows="4">@currentValue</textarea>
-                                break;
-                        }
-                    </div>
-                }
+                                @switch (attr.Type?.ToLower())
+                                {
+                                    case "dropdown":
+                                        <select name="attributeValues[@attr.Id]" class="form-select attribute-input"
+                                                @(attr.IsRequired ? "required" : "")>
+                                            <option value="">-- Select @attr.Name --</option>
+                                            @if (!string.IsNullOrEmpty(attr.Options))
+                                            {
+                                                foreach (var option in attr.Options.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                                                {
+                                                    <option value="@option" selected="@(currentValue == option)">@option</option>
+                                                }
+                                            }
+                                        </select>
+                                        break;
+
+                                    case "number":
+                                        <input type="number" name="attributeValues[@attr.Id]" class="form-control attribute-input"
+                                               value="@currentValue" placeholder="Enter a number"
+                                               @(attr.IsRequired ? "required" : "") />
+                                        break;
+
+                                    case "boolean":
+                                        <select name="attributeValues[@attr.Id]" class="form-select attribute-input"
+                                                @(attr.IsRequired ? "required" : "")>
+                                            <option value="">-- Select --</option>
+                                            <option value="Yes" selected="@(currentValue == "Yes")">Yes</option>
+                                            <option value="No" selected="@(currentValue == "No")">No</option>
+                                        </select>
+                                        break;
+
+                                    default:
+                                        <textarea name="attributeValues[@attr.Id]" class="form-control attribute-input" rows="4"
+                                                  placeholder="Enter @attr.Name"
+                                                  @(attr.IsRequired ? "required" : "")>@currentValue</textarea>
+                                        break;
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
             }
             else
             {
-                <div class="alert alert-info">No attributes defined for this position.</div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No attributes defined for this position.
+                </div>
             }
 
-            <div class="mt-4">
+            <!-- Form Actions -->
+            <div class="mt-5">
                 <button type="submit" class="btn btn-success btn-lg px-5">
-                    <i class="bi bi-save"></i> Save Changes
+                    <i class="bi bi-check-circle"></i> Save Changes
                 </button>
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">Cancel</a>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
             </div>
         </form>
     </div>
 
     <div class="col-md-4">
+        <!-- Help Card -->
+        <div class="card mb-4 sticky-top" style="top: 20px;">
+            <div class="card-header bg-primary">
+                <h6 class="text-white mb-0"><i class="bi bi-lightbulb"></i> Tips & Guidelines</h6>
+            </div>
+            <div class="card-body small">
+                <h6 class="fw-bold mb-2">Required Fields</h6>
+                <p class="text-muted mb-3">
+                    All fields marked with <span class="text-danger fw-bold">*</span> must be completed before you can submit your application.
+                </p>
+
+                <h6 class="fw-bold mb-2">Save Your Work</h6>
+                <p class="text-muted mb-3">
+                    Click the "Save Changes" button at the bottom to save your progress. You can always come back and edit later.
+                </p>
+
+                <h6 class="fw-bold mb-2">Profile Sync</h6>
+                <p class="text-muted mb-3">
+                    Your CV data automatically syncs with your master candidate profile.
+                </p>
+
+                <h6 class="fw-bold mb-2">Need Help?</h6>
+                <p class="text-muted mb-0">
+                    <a href="#" class="text-primary">Contact support</a> if you have questions about any field.
+                </p>
+            </div>
+        </div>
+
+        <!-- Field Guide Card -->
         <div class="card">
-            <div class="card-body">
-                <h6>Quick Tips</h6>
-                <ul class="small">
-                    <li>Fill all required fields marked with <span class="text-danger">*</span></li>
-                    <li>Changes will sync to your master profile</li>
-                </ul>
+            <div class="card-header bg-info">
+                <h6 class="text-white mb-0"><i class="bi bi-book"></i> Field Types</h6>
+            </div>
+            <div class="card-body small">
+                <div class="mb-3">
+                    <span class="badge bg-secondary me-2">Text</span>
+                    <p class="text-muted mb-0">Free-form text input (name, description, etc.)</p>
+                </div>
+                <div class="mb-3">
+                    <span class="badge bg-secondary me-2">Number</span>
+                    <p class="text-muted mb-0">Numeric input (years, salary, etc.)</p>
+                </div>
+                <div class="mb-3">
+                    <span class="badge bg-secondary me-2">Dropdown</span>
+                    <p class="text-muted mb-0">Select from predefined options</p>
+                </div>
+                <div class="mb-0">
+                    <span class="badge bg-secondary me-2">Yes/No</span>
+                    <p class="text-muted mb-0">Boolean choice</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .attribute-field {
+        transition: all 0.3s ease;
+        border-left: 4px solid #e9ecef;
+    }
+
+    .attribute-field:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left-color: #007bff;
+    }
+
+    .attribute-field.border-danger {
+        background-color: rgba(220, 53, 69, 0.05);
+        border-left-color: #dc3545;
+    }
+
+    .attribute-input {
+        transition: border-color 0.3s ease;
+    }
+
+    .attribute-input:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .sticky-top {
+        z-index: 10;
+    }
+</style>

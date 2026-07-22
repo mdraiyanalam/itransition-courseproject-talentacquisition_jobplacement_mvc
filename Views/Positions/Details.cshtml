@@ -34,7 +34,10 @@
 
     <!-- Discussions Tab -->
     <div class="tab-pane fade" id="discussions" role="tabpanel" aria-labelledby="discussions-tab">
-        <h4><i class="bi bi-chat-dots"></i> Discussions</h4>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="bi bi-chat-dots"></i> Discussions</h4>
+            <span id="connectionStatus" class="badge bg-success">Connected</span>
+        </div>
 
         <div id="discussionContainer" class="border p-3 mb-4 bg-white rounded shadow-sm"
              style="max-height: 500px; overflow-y: auto;">
@@ -93,15 +96,29 @@
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script>
         let connection;
+        let isConnected = false;
+        const connectionStatusBadge = document.getElementById("connectionStatus");
+
+        function updateConnectionStatus(status, isConnectedState = false) {
+            isConnected = isConnectedState;
+            if (connectionStatusBadge) {
+                connectionStatusBadge.textContent = status;
+                connectionStatusBadge.className = isConnectedState 
+                    ? "badge bg-success" 
+                    : "badge bg-warning";
+            }
+        }
 
         async function initializeSignalR() {
             try {
                 connection = new signalR.HubConnectionBuilder()
                     .withUrl("/discussionHub")
+                    .withAutomaticReconnect([0, 0, 0, 1000, 3000, 5000, 10000])
                     .build();
 
+                // Message received handler
                 connection.on("ReceiveMessage", function (userName, message, timestamp) {
-                    console.log("New message received:", userName, message);
+                    console.log("📨 New message received:", userName, message);
                     const container = document.getElementById("discussionContainer");
                     const div = document.createElement("div");
                     div.className = "d-flex mb-3";
@@ -115,40 +132,72 @@
                     container.scrollTop = container.scrollHeight;
                 });
 
+                // Reconnected handler
+                connection.onreconnected((connectionId) => {
+                    console.log("✅ Reconnected to server (ID:", connectionId, ")");
+                    updateConnectionStatus("Connected", true);
+                });
+
+                // Reconnecting handler
+                connection.onreconnecting((err) => {
+                    console.log("⚠️ Attempting to reconnect... Error:", err?.message);
+                    updateConnectionStatus("Reconnecting...", false);
+                });
+
+                // Disconnected handler
+                connection.onclose((err) => {
+                    console.log("❌ Disconnected:", err?.message);
+                    updateConnectionStatus("Disconnected", false);
+                });
+
+                // Start connection
                 await connection.start();
                 console.log("✅ SignalR Connected successfully!");
+                updateConnectionStatus("Connected", true);
             } catch (err) {
                 console.error("❌ SignalR Connection Failed:", err);
+                updateConnectionStatus("Connection Failed", false);
+                setTimeout(() => initializeSignalR(), 5000);
             }
         }
 
         // Post Comment
-        document.getElementById("postButton").addEventListener("click", async () => {
-            const messageInput = document.getElementById("messageInput");
-            const message = messageInput.value.trim();
-            const positionId = document.getElementById("positionId").value;
+        const postButton = document.getElementById("postButton");
+        if (postButton) {
+            postButton.addEventListener("click", async () => {
+                const messageInput = document.getElementById("messageInput");
+                const message = messageInput.value.trim();
+                const positionId = document.getElementById("positionId").value;
 
-            if (!message) return;
-
-            try {
-                const response = await fetch(`/Positions/AddDiscussion?PositionId=${positionId}&Message=${encodeURIComponent(message)}`, {
-                    method: "POST",
-                    headers: {
-                        "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                });
-
-                if (response.ok) {
-                    messageInput.value = "";
-                    console.log("✅ Comment sent successfully");
+                if (!message) {
+                    alert("Please enter a message.");
+                    return;
                 }
-            } catch (err) {
-                console.error("Failed to post comment:", err);
-                alert("Failed to post comment. Please try again.");
-            }
-        });
+
+                try {
+                    const response = await fetch(`/Positions/AddDiscussion?PositionId=${positionId}&Message=${encodeURIComponent(message)}`, {
+                        method: "POST",
+                        headers: {
+                            "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    });
+
+                    if (response.ok) {
+                        messageInput.value = "";
+                        console.log("✅ Comment sent successfully");
+                    } else {
+                        const errorText = await response.text();
+                        console.error("Server error:", errorText);
+                        alert("Failed to post comment. Server error: " + response.status);
+                    }
+                } catch (err) {
+                    console.error("Failed to post comment:", err);
+                    alert("Failed to post comment. Please check your connection and try again.");
+                }
+            });
+        }
 
         // Initialize SignalR when page loads
-        window.onload = initializeSignalR;
+        window.addEventListener("load", initializeSignalR);
     </script>
 }

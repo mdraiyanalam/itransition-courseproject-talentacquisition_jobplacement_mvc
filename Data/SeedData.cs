@@ -1,4 +1,4 @@
-﻿// Data/SeedData.cs
+// Data/SeedData.cs
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,7 +39,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                     Email = recruiterEmail,
                     FullName = "Demo Recruiter",
                     EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
                 };
 
                 var result = await userManager.CreateAsync(user, "Recruiter@123");
@@ -60,7 +59,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                     Email = candidateEmail,
                     FullName = "Demo Candidate",
                     EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
                 };
 
                 var result = await userManager.CreateAsync(user, "Candidate@123");
@@ -75,7 +73,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         Summary = "Experienced software developer with a focus on backend systems.",
                         Experience = "Worked on multiple enterprise projects using .NET and cloud.",
                         Education = "B.Sc. in Computer Science",
-                        CreatedAt = DateTime.UtcNow
                     };
 
                     context.CandidateProfiles.Add(profile);
@@ -90,7 +87,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         EndDate = DateTime.UtcNow.AddYears(-1),
                         Description = "Developed inventory management system.",
                         TechnologyTags = "C#, ASP.NET, SQL",
-                        CreatedAt = DateTime.UtcNow
                     };
                     var p2 = new Project
                     {
@@ -100,7 +96,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         EndDate = null,
                         Description = "React + TypeScript storefront.",
                         TechnologyTags = "React, TypeScript, Tailwind",
-                        CreatedAt = DateTime.UtcNow
                     };
                     context.Projects.AddRange(p1, p2);
 
@@ -130,7 +125,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                     Email = adminEmail,
                     FullName = "System Administrator",
                     EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
                 };
 
                 var result = await userManager.CreateAsync(user, "Admin@123");
@@ -172,7 +166,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         Description = "Looking for experienced backend developer with strong .NET skills.",
                         ProjectTags = "C#, ASP.NET, SQL, Azure",
                         MaxProjects = 5,
-                        CreatedAt = DateTime.UtcNow.AddDays(-10)
                     },
                     new Position
                     {
@@ -182,7 +175,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         Description = "Join our dynamic team to analyze business processes.",
                         ProjectTags = "Requirements, UML, Power BI",
                         MaxProjects = 4,
-                        CreatedAt = DateTime.UtcNow.AddDays(-5)
                     },
                     new Position
                     {
@@ -192,7 +184,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         Description = "Build modern web applications with React and TypeScript.",
                         ProjectTags = "React, TypeScript, Tailwind",
                         MaxProjects = 6,
-                        CreatedAt = DateTime.UtcNow.AddDays(-2)
                     },
                     new Position
                     {
@@ -202,7 +193,6 @@ namespace talentacquisition_jobplacement_mvc.Data
                         Description = "Manual and automated testing for enterprise products.",
                         ProjectTags = "Selenium, Postman, Jira",
                         MaxProjects = 3,
-                        CreatedAt = DateTime.UtcNow.AddDays(-15)
                     }
                 };
 
