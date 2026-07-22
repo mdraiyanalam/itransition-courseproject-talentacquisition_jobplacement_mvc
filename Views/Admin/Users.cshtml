@@ -76,45 +76,57 @@
                             }
                         </td>
                         <td class="text-end">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="@Url.Action("ViewProfile", "Admin", new { id = item.User.Id })"
-                                   class="btn btn-outline-primary" title="View Profile">
-                                    <i class="bi bi-person-circle"></i>
-                                </a>
-
-                                <a href="@Url.Action("EditRoles", "Admin", new { id = item.User.Id })"
-                                   class="btn btn-outline-info" title="Edit Roles">
-                                    <i class="bi bi-lock"></i>
-                                </a>
-
-                                @if (item.User.IsBlocked)
-                                {
-                                    <form method="post" action="@Url.Action("UnblockUser", "Admin")" style="display: inline;">
-                                        <input type="hidden" name="id" value="@item.User.Id" />
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-warning" title="Unblock User"
-                                                onclick="return confirm('Unblock this user?')">
-                                            <i class="bi bi-unlock-fill"></i>
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form method="post" action="@Url.Action("BlockUser", "Admin")" style="display: inline;">
-                                        <input type="hidden" name="id" value="@item.User.Id" />
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-danger" title="Block User"
-                                                onclick="return confirm('Block this user?')">
-                                            <i class="bi bi-lock-fill"></i>
-                                        </button>
-                                    </form>
-                                }
-
-                                <button type="button" class="btn btn-outline-danger" title="Delete User"
-                                        data-bs-toggle="modal" data-bs-target="#deleteUserModal"
-                                        data-user-id="@item.User.Id" data-user-email="@item.User.Email" data-user-name="@item.User.FullName">
-                                    <i class="bi bi-trash"></i>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
                                 </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("ViewProfile", "Admin", new { id = item.User.Id })">
+                                            <i class="bi bi-person-circle"></i> View Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("EditRoles", "Admin", new { id = item.User.Id })">
+                                            <i class="bi bi-lock"></i> Edit Roles
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    @if (item.User.IsBlocked)
+                                    {
+                                        <li>
+                                            <form method="post" action="@Url.Action("UnblockUser", "Admin")" style="display: inline;" class="w-100">
+                                                <input type="hidden" name="id" value="@item.User.Id" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="dropdown-item text-warning"
+                                                        onclick="return confirm('Unblock this user?')">
+                                                    <i class="bi bi-unlock-fill"></i> Unblock User
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <form method="post" action="@Url.Action("BlockUser", "Admin")" style="display: inline;" class="w-100">
+                                                <input type="hidden" name="id" value="@item.User.Id" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="dropdown-item text-danger"
+                                                        onclick="return confirm('Block this user?')">
+                                                    <i class="bi bi-lock-fill"></i> Block User
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                    <li>
+                                        <button type="button" class="dropdown-item text-danger"
+                                                data-bs-toggle="modal" data-bs-target="#deleteUserModal"
+                                                data-user-id="@item.User.Id" data-user-email="@item.User.Email" data-user-name="@item.User.FullName">
+                                            <i class="bi bi-trash"></i> Delete User
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
