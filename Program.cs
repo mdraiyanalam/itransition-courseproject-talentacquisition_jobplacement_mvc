@@ -27,6 +27,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+Console.WriteLine("===== CONNECTION STRING =====");
+Console.WriteLine(string.IsNullOrEmpty(connectionString) ? "EMPTY / NULL" : connectionString);
+Console.WriteLine("=============================");
+
 // Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
