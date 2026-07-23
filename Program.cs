@@ -13,12 +13,19 @@ using talentacquisition_jobplacement_mvc.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Connection String
-var connectionString = builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
-    ?? throw new InvalidOperationException("Connection string 'talentacquisition_jobplacement_mvcContextConnection' not found.");
+//var connectionString = builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
+//    ?? throw new InvalidOperationException("Connection string 'talentacquisition_jobplacement_mvcContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
+    ?? throw new InvalidOperationException("Connection string not found.");
 
 // DbContext
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(connectionString));
+
+// DbContext - Use PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
@@ -94,14 +101,19 @@ var app = builder.Build();
 // QuestPDF License
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
-// Seeding
+// Apply migrations + Seed data on startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();   // Creates/updates tables
+
+        // Seed Roles
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         string[] roleNames = { "Administrator", "Recruiter", "Candidate" };
+
         foreach (var roleName in roleNames)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -109,13 +121,15 @@ using (var scope = app.Services.CreateScope())
                 await roleManager.CreateAsync(new IdentityRole(roleName));
             }
         }
+
+        // Seed other data
         await SeedData.Initialize(services);
-        Console.WriteLine("✅ Database seeded successfully.");
+        Console.WriteLine("✅ Database migrated and seeded successfully.");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "An error occurred while migrating/seeding the database.");
     }
 }
 
