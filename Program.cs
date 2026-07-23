@@ -112,7 +112,9 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();   // Creates/updates tables
+
+        // This creates all tables
+        db.Database.Migrate();
 
         // Seed Roles
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -134,9 +136,9 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating/seeding the database.");
+        Console.WriteLine("❌ Migration/Seeding failed: " + ex.Message);
     }
 }
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
