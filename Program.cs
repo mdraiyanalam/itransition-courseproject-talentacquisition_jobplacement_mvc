@@ -113,9 +113,10 @@ using (var scope = app.Services.CreateScope())
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
 
-        Console.WriteLine(">>> Applying migrations...");
-        db.Database.Migrate();
-        Console.WriteLine(">>> Migrations applied successfully");
+        Console.WriteLine(">>> Dropping and recreating database...");
+        db.Database.EnsureDeleted();   // Deletes everything
+        db.Database.EnsureCreated();   // Creates all tables from the current model
+        Console.WriteLine(">>> Database recreated successfully");
 
         // Seed Roles
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -126,6 +127,7 @@ using (var scope = app.Services.CreateScope())
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 await roleManager.CreateAsync(new IdentityRole(roleName));
+                Console.WriteLine($">>> Role created: {roleName}");
             }
         }
 
@@ -135,6 +137,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine(">>> ERROR: " + ex.Message);
+        Console.WriteLine(ex.ToString());
     }
 }
 
