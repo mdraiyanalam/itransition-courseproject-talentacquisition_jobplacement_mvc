@@ -64,6 +64,10 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
         {
             options.ClientId = googleClientId;
             options.ClientSecret = googleClientSecret;
+            options.CallbackPath = "/signin-google";
+            options.SaveTokens = true;
+            options.CorrelationCookie.SameSite = SameSiteMode.None;
+            options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
         });
     Console.WriteLine("✅ Google Authentication enabled.");
 }
@@ -71,6 +75,18 @@ else
 {
     Console.WriteLine("⚠️ Google Authentication is disabled.");
 }
+
+// ========== COOKIE POLICY (VERY IMPORTANT ON RENDER) ==========
+builder.Services.ConfigureExternalCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
 
 // Localization - resources path
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
