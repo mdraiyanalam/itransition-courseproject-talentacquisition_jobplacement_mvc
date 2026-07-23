@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -30,6 +31,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 Console.WriteLine("===== CONNECTION STRING =====");
 Console.WriteLine(string.IsNullOrEmpty(connectionString) ? "EMPTY / NULL" : connectionString);
 Console.WriteLine("=============================");
+
+// ========== DATA PROTECTION (FIX FOR CORRELATION FAILED) ==========
+var keysPath = Path.Combine(builder.Environment.ContentRootPath, "keys");
+Directory.CreateDirectory(keysPath);
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("TalentAcquisitionApp");
+// ==================================================================
 
 // Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
