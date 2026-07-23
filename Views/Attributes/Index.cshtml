@@ -35,6 +35,11 @@
     </div>
 </div>
 
+<!-- Add New Attributes -->
+<div class="mt-4">
+    <a asp-action="Create" class="btn btn-success btn-lg"><i class="bi bi-plus-circle"></i> New Attribute</a>
+</div>
+
 <!-- Recently Used -->
 @if (ViewBag.RecentAttributes != null && ((List<talentacquisition_jobplacement_mvc.Models.AttributeDefinition>)ViewBag.RecentAttributes).Any())
 {
@@ -98,6 +103,3 @@ else
     </table>
 }
 
-<div class="mt-4">
-    <a asp-action="Create" class="btn btn-success btn-lg"><i class="bi bi-plus-circle"></i> New Attribute</a>
-</div>
