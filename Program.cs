@@ -139,10 +139,30 @@ using (var scope = app.Services.CreateScope())
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
 
-        Console.WriteLine(">>> Dropping and recreating database...");
-        db.Database.EnsureDeleted();   // Deletes everything
-        db.Database.EnsureCreated();   // Creates all tables from the current model
-        Console.WriteLine(">>> Database recreated successfully");
+        // PRODUCTION FIX: Only recreate DB in development
+        if (app.Environment.IsDevelopment())
+        {
+            Console.WriteLine(">>> [Development Mode] Dropping and recreating database...");
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
+            Console.WriteLine(">>> Database recreated successfully");
+        }
+        else
+        {
+            // Production: Apply pending migrations without dropping
+            Console.WriteLine(">>> [Production Mode] Applying migrations...");
+            var migrations = db.Database.GetPendingMigrations();
+            if (migrations.Any())
+            {
+                Console.WriteLine($">>> Found {migrations.Count()} pending migrations");
+                db.Database.Migrate();
+                Console.WriteLine(">>> Migrations applied successfully");
+            }
+            else
+            {
+                Console.WriteLine(">>> Database is up to date");
+            }
+        }
 
         // Seed Roles
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -157,8 +177,16 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        await SeedData.Initialize(services);
-        Console.WriteLine(">>> Database seeded successfully");
+        // Seed data only if in development or first run
+        if (app.Environment.IsDevelopment() || !db.Users.Any())
+        {
+            await SeedData.Initialize(services);
+            Console.WriteLine(">>> Database seeded successfully");
+        }
+        else
+        {
+            Console.WriteLine(">>> Skipping seed data (production mode with existing data)");
+        }
     }
     catch (Exception ex)
     {
