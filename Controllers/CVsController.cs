@@ -307,7 +307,9 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
             if (cv == null) return NotFound();
 
-            var pdfBytes = _cvGenerator.GenerateCV(cv);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var includePrivateNote = User.IsInRole("Recruiter") || User.IsInRole("Administrator");
+            var pdfBytes = _cvGenerator.GenerateCV(cv, baseUrl, includePrivateNote);
             return File(pdfBytes, "application/pdf", $"CV_{cv.User?.FullName?.Replace(" ", "_") ?? "Candidate"}.pdf");
         }
 

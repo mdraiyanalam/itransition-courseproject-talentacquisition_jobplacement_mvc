@@ -107,7 +107,7 @@ namespace talentacquisition_jobplacement_mvc.Tests
     {
         public string RulesJson { get; set; } = string.Empty;
     }
-n    // Stub for DiscussionPost
+// Stub for DiscussionPost
     public partial class DiscussionPost
     {
         public int Id { get; set; }
@@ -129,12 +129,12 @@ namespace talentacquisition_jobplacement_mvc.Tests
             // Arrange
             var rules = new List<AccessRule>();
             var candidate = new CandidateProfile { };
-n            // Act
+// Act
             var result = AccessRuleEvaluator.EvaluateRules(rules, candidate, new List<AttributeDefinition>());
-n            // Assert
+// Assert
             Assert.True(result, "Empty rules should return true (public position)");
         }
-n        [Fact]
+[Fact]
         public void EvaluateRules_NumericGreaterThan_CorrectComparison()
         {
             // Arrange
@@ -142,21 +142,21 @@ namespace talentacquisition_jobplacement_mvc.Tests
             {
                 new AccessRule { RulesJson = "[{\"attributeId\":1,\"operator\":\">\",\"value\":\"5\"}]" }
             };
-n            var profile = new CandidateProfile { };
+var profile = new CandidateProfile { };
             var attributes = new List<AttributeDefinition>
             {
                 new AttributeDefinition { Id = 1, Name = "GPA", Type = "Numeric" }
             };
-n            profile.ProfileAttributes = new List<CandidateProfileAttribute>
+profile.ProfileAttributes = new List<CandidateProfileAttribute>
             {
                 new CandidateProfileAttribute { AttributeDefinitionId = 1, Value = "7.5" }
             };
-n            // Act
+// Act
             var result = AccessRuleEvaluator.EvaluateRules(rules, profile, attributes);
-n            // Assert
+// Assert
             Assert.True(result, "7.5 > 5 should be true");
         }
-n        [Fact]
+[Fact]
         public void EvaluateRules_StringEquality_CorrectComparison()
         {
             // Arrange
@@ -164,21 +164,21 @@ namespace talentacquisition_jobplacement_mvc.Tests
             {
                 new AccessRule { RulesJson = "[{\"attributeId\":1,\"operator\":\"=\",\"value\":\"Advanced\"}]" }
             };
-n            var profile = new CandidateProfile { };
+var profile = new CandidateProfile { };
             var attributes = new List<AttributeDefinition>
             {
                 new AttributeDefinition { Id = 1, Name = "English Level", Type = "Dropdown" }
             };
-n            profile.ProfileAttributes = new List<CandidateProfileAttribute>
+profile.ProfileAttributes = new List<CandidateProfileAttribute>
             {
                 new CandidateProfileAttribute { AttributeDefinitionId = 1, Value = "Advanced" }
             };
-n            // Act
+// Act
             var result = AccessRuleEvaluator.EvaluateRules(rules, profile, attributes);
-n            // Assert
+// Assert
             Assert.True(result, "\"Advanced\" = \"Advanced\" should be true");
         }
-n        [Fact]
+[Fact]
         public void EvaluateRules_MissingAttribute_ReturnsFalse()
         {
             // Arrange
@@ -186,14 +186,14 @@ namespace talentacquisition_jobplacement_mvc.Tests
             {
                 new AccessRule { RulesJson = "[{\"attributeId\":999,\"operator\":\"=\",\"value\":\"Test\"}]" }
             };
-n            var profile = new CandidateProfile { ProfileAttributes = new List<CandidateProfileAttribute>() };
+var profile = new CandidateProfile { ProfileAttributes = new List<CandidateProfileAttribute>() };
             var attributes = new List<AttributeDefinition>();
-n            // Act
+// Act
             var result = AccessRuleEvaluator.EvaluateRules(rules, profile, attributes);
-n            // Assert
+// Assert
             Assert.False(result, "Missing required attribute should return false");
         }
-n        [Fact]
+[Fact]
         public void EvaluateRules_MultipleRulesAND_AllMustBeTrue()
         {
             // Arrange
@@ -276,3 +276,5 @@ namespace talentacquisition_jobplacement_mvc.Tests
 
     }
 }
+
+

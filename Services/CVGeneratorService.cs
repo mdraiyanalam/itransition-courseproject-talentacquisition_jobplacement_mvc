@@ -10,7 +10,9 @@ namespace talentacquisition_jobplacement_mvc.Services
 {
     public class CVGeneratorService
     {
-        public byte[] GenerateCV(CV cv)
+        // Generate CV PDF. baseUrl should be the application's base URL (e.g. https://itransition-courseproject-f3vg.onrender.com)
+        // includePrivateNote: when true, include a note under the QR that the linked online profile is visible only to Recruiters and Administrators.
+        public byte[] GenerateCV(CV cv, string baseUrl, bool includePrivateNote)
         {
             QuestPDF.Settings.License = LicenseType.Evaluation;
 
@@ -28,7 +30,7 @@ namespace talentacquisition_jobplacement_mvc.Services
                     page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Helvetica"));
 
                     page.Header().Element(Header);
-                    page.Content().Element(c => Content(c, cv, attributeValues));
+                    page.Content().Element(c => Content(c, cv, attributeValues, baseUrl, includePrivateNote));
                     page.Footer().Element(Footer);
                 });
             }).GeneratePdf();
@@ -49,7 +51,7 @@ namespace talentacquisition_jobplacement_mvc.Services
             });
         }
 
-        private void Content(IContainer container, CV cv, Dictionary<int, string> attributeValues)
+        private void Content(IContainer container, CV cv, Dictionary<int, string> attributeValues, string baseUrl, bool includePrivateNote)
         {
             container.Column(column =>
             {
@@ -119,7 +121,14 @@ namespace talentacquisition_jobplacement_mvc.Services
                 // QR Code
                 column.Item().PaddingTop(40).AlignCenter().Text("Scan to View Online Profile").FontSize(10);
                 column.Item().PaddingTop(8).AlignCenter().Width(160)
-                    .Image(GenerateQRCode($"https://yourapp.com/cvs/details/{cv.Id}"));
+                    .Image(GenerateQRCode(GetProfileUrl(baseUrl, cv)));
+
+                // Conditional note about visibility of the online profile (only shown when the requester is a Recruiter or Administrator)
+                if (includePrivateNote)
+                {
+                    column.Item().PaddingTop(8).AlignCenter().Text("Note: The online profile linked by this QR code is viewable only by Recruiters and Administrators on the platform.")
+                        .FontSize(9).FontColor(Colors.Grey.Medium);
+                }
             });
         }
 
@@ -135,6 +144,20 @@ namespace talentacquisition_jobplacement_mvc.Services
             var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
             var qrCode = new PngByteQRCode(qrCodeData);
             return qrCode.GetGraphic(20);
+        }
+
+        private string GetProfileUrl(string baseUrl, CV cv)
+        {
+            // Prefer candidate's user id if available, fall back to CV id route
+            var userId = cv.CandidateProfile?.UserId ?? cv.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                // Use Admin/ViewProfile route so recruiters/admins can view the profile when authorized
+                return $"{baseUrl.TrimEnd('/')}/Admin/ViewProfile/{userId}";
+            }
+
+            // fallback to CV details page
+            return $"{baseUrl.TrimEnd('/')}/CVs/Details/{cv.Id}";
         }
     }
 }
