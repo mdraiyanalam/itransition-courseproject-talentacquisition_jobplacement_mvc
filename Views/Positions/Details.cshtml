@@ -16,12 +16,15 @@
             Overview
         </button>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="discussions-tab" data-bs-toggle="tab"
-                data-bs-target="#discussions" type="button" role="tab" aria-controls="discussions" aria-selected="false">
-            Discussions (@(Model.DiscussionPosts?.Count ?? 0))
-        </button>
-    </li>
+    @if (User.IsInRole("Candidate") || User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="discussions-tab" data-bs-toggle="tab"
+                    data-bs-target="#discussions" type="button" role="tab" aria-controls="discussions" aria-selected="false">
+                Discussions (@(Model.DiscussionPosts?.Count ?? 0))
+            </button>
+        </li>
+    }
 </ul>
 
 <div class="tab-content" id="positionTabContent">
@@ -32,64 +35,67 @@
         <p class="text-muted">Overview content for this position goes here...</p>
     </div>
 
-    <!-- Discussions Tab -->
-    <div class="tab-pane fade" id="discussions" role="tabpanel" aria-labelledby="discussions-tab">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4><i class="bi bi-chat-dots"></i> Discussions</h4>
-            <span id="connectionStatus" class="badge bg-success">Connected</span>
-        </div>
+    @if (User.IsInRole("Candidate") || User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+    {
+        <!-- Discussions Tab -->
+        <div class="tab-pane fade" id="discussions" role="tabpanel" aria-labelledby="discussions-tab">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4><i class="bi bi-chat-dots"></i> Discussions</h4>
+                <span id="connectionStatus" class="badge bg-success">Connected</span>
+            </div>
 
-        <div id="discussionContainer" class="border p-3 mb-4 bg-white rounded shadow-sm"
-             style="max-height: 500px; overflow-y: auto;">
+            <div id="discussionContainer" class="border p-3 mb-4 bg-white rounded shadow-sm"
+                 style="max-height: 500px; overflow-y: auto;">
 
-            @foreach (var post in Model.DiscussionPosts?.OrderBy(p => p.CreatedAt) ?? Enumerable.Empty<DiscussionPost>())
+                @foreach (var post in Model.DiscussionPosts?.OrderBy(p => p.CreatedAt) ?? Enumerable.Empty<DiscussionPost>())
+                {
+                    <div class="d-flex mb-3">
+                        <div class="flex-grow-1">
+                            @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+                            {
+                                <a asp-controller="Profiles" asp-action="ViewProfile" asp-route-userId="@post.UserId" class="fw-bold text-primary">
+                                    @post.User?.FullName
+                                </a>
+                            }
+                            else
+                            {
+                                <strong>@post.User?.FullName</strong>
+                            }
+                            <small class="text-muted ms-2">@post.CreatedAt.ToString("g")</small>
+                            <div class="mt-1">@Html.Raw(MarkdownHelper.ToHtml(post.Message))</div>
+                        </div>
+                    </div>
+                }
+
+                @if (!Model.DiscussionPosts?.Any() ?? true)
+                {
+                    <p class="text-muted text-center py-4">No comments yet. Be the first to start the discussion!</p>
+                }
+            </div>
+
+            @if (User.Identity?.IsAuthenticated == true)
             {
-                <div class="d-flex mb-3">
-                    <div class="flex-grow-1">
-                        @if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
-                        {
-                            <a asp-controller="Profiles" asp-action="ViewProfile" asp-route-userId="@post.UserId" class="fw-bold text-primary">
-                                @post.User?.FullName
-                            </a>
-                        }
-                        else
-                        {
-                            <strong>@post.User?.FullName</strong>
-                        }
-                        <small class="text-muted ms-2">@post.CreatedAt.ToString("g")</small>
-                        <div class="mt-1">@Html.Raw(MarkdownHelper.ToHtml(post.Message))</div>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="discussionForm">
+                            <input type="hidden" id="positionId" value="@Model.Id" />
+                            <textarea id="messageInput" class="form-control" rows="3"
+                                  placeholder="Write a comment..." style="resize: vertical;"></textarea>
+                            <button type="button" id="postButton" class="btn btn-primary mt-3">
+                                <i class="bi bi-send"></i> Post Comment
+                            </button>
+                        </form>
                     </div>
                 </div>
             }
-
-            @if (!Model.DiscussionPosts?.Any() ?? true)
+            else
             {
-                <p class="text-muted text-center py-4">No comments yet. Be the first to start the discussion!</p>
+                <div class="alert alert-info">
+                    Please <a asp-area="Identity" asp-page="/Account/Login">log in</a> to participate in discussions.
+                </div>
             }
         </div>
-
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <div class="card">
-                <div class="card-body">
-                    <form id="discussionForm">
-                        <input type="hidden" id="positionId" value="@Model.Id" />
-                        <textarea id="messageInput" class="form-control" rows="3"
-                              placeholder="Write a comment..." style="resize: vertical;"></textarea>
-                        <button type="button" id="postButton" class="btn btn-primary mt-3">
-                            <i class="bi bi-send"></i> Post Comment
-                        </button>
-                    </form>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info">
-                Please <a asp-area="Identity" asp-page="/Account/Login">log in</a> to participate in discussions.
-            </div>
-        }
-    </div>
+    }
 </div>
 
 @section Scripts {
