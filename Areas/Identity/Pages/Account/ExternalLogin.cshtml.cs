@@ -31,12 +31,15 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
 
+        private readonly RoleManager<IdentityRole> _roleManager;
+
         public ExternalLoginModel(
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -44,6 +47,7 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -160,6 +164,18 @@ namespace talentacquisition_jobplacement_mvc.Areas.Identity.Pages.Account
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    // Auto-assign Candidate role (same as Register.cshtml.cs)
+                    const string candidateRole = "Candidate";
+                    if (!await _roleManager.RoleExistsAsync(candidateRole))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(candidateRole));
+                    }
+                    var roleResult = await _userManager.AddToRoleAsync(user, candidateRole);
+                    if (!roleResult.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to assign Candidate role to OAuth user {Email}", Input.Email);
+                    }
+
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {

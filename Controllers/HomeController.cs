@@ -67,6 +67,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             ViewBag.TotalPositions = await _context.Positions.CountAsync();
             ViewBag.TotalCandidates = await _context.Users.CountAsync();
 
+            // Total Recruiters
+            var recruiterRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Recruiter");
+            ViewBag.TotalRecruiters = recruiterRole != null
+                ? await _context.UserRoles.CountAsync(ur => ur.RoleId == recruiterRole.Id)
+                : 0;
+
             return View();
         }
 

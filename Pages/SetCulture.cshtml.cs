@@ -10,7 +10,9 @@ public class SetCultureModel : PageModel
         Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName, cookieValue, new CookieOptions
         {
             Expires = DateTimeOffset.UtcNow.AddYears(1),
-            Path = "/"
+            Path = "/",
+            SameSite = SameSiteMode.None,
+            Secure = true
         });
         return LocalRedirect(returnUrl);
     }

@@ -27,7 +27,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers.Api
                 .Where(a => a.Name.ToLower().Contains(query) || (a.Description != null && a.Description.ToLower().Contains(query)))
                 .OrderBy(a => a.Name)
                 .Take(12)
-                .Select(a => new { a.Id, a.Name, a.Category, a.Type })
+                .Select(a => new { a.Id, a.Name, a.Category, a.Type, a.MaxLength, a.RegexPattern, a.MinValue, a.MaxValue })
                 .ToListAsync();
 
             return Ok(results);
@@ -43,7 +43,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers.Api
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.First().AttributeDefinition)
                 .Take(8)
-                .Select(a => new { a.Id, a.Name, a.Category, a.Type })
+                .Select(a => new { a.Id, a.Name, a.Category, a.Type, a.MaxLength, a.RegexPattern, a.MinValue, a.MaxValue })
                 .ToListAsync();
 
             return Ok(recent);

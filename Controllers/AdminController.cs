@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ using talentacquisition_jobplacement_mvc.Models;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -22,6 +22,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // GET: DeleteUserConfirmed - redirect to Users to avoid 404 when accessed directly
         [HttpGet]
+        [Authorize(Roles = "Administrator")]
         public IActionResult DeleteUserConfirmed()
         {
             // The POST action performs the deletion. Navigating to this URL by GET should not attempt deletion.
@@ -30,6 +31,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: All Users
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Users()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -49,6 +51,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: Edit User Roles
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> EditRoles(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -72,6 +75,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         // POST: Edit User Roles
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> EditRoles(UserRoleEditViewModel model)
         {
             var user = await _userManager.FindByIdAsync(model.UserId);
@@ -90,6 +94,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: Delete Confirmation
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -108,6 +113,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         // POST: Delete User
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> DeleteUserConfirmed(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -136,6 +142,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         // POST: Block User
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> BlockUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -172,6 +179,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         // POST: Unblock User
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> UnblockUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -200,6 +208,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         }
 
         // GET: View User Profile
+        [Authorize(Roles = "Recruiter,Administrator")]
         public async Task<IActionResult> ViewProfile(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -232,3 +241,5 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public string? FullName { get; set; }
     }
 }
+
+

@@ -40,6 +40,24 @@
                 <input asp-for="Options" class="form-control" placeholder="Option1,Option2,Option3" />
             </div>
             <div class="mb-3">
+                <label asp-for="MaxLength" class="form-label">Max Length (optional)</label>
+                <input asp-for="MaxLength" type="number" min="1" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RegexPattern" class="form-label">Regex Pattern (optional)</label>
+                <input asp-for="RegexPattern" class="form-control" placeholder="^\d{2,}$" />
+            </div>
+            <div class="mb-3 row">
+                <div class="col-md-6">
+                    <label asp-for="MinValue" class="form-label">Min Value (optional)</label>
+                    <input asp-for="MinValue" type="number" step="any" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="MaxValue" class="form-label">Max Value (optional)</label>
+                    <input asp-for="MaxValue" type="number" step="any" class="form-control" />
+                </div>
+            </div>
+            <div class="mb-3">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control" rows="3"></textarea>
             </div>
