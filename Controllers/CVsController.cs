@@ -340,6 +340,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             var cv = await _context.CVs
                 .Include(c => c.Position)
                     .ThenInclude(p => p.PositionAttributes)
+                    .ThenInclude(pa => pa.AttributeDefinition)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cv == null) return NotFound();

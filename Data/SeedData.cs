@@ -37,7 +37,7 @@ namespace talentacquisition_jobplacement_mvc.Data
                 {
                     UserName = recruiterEmail,
                     Email = recruiterEmail,
-                    FullName = "Demo Recruiter",
+                    FullName = "Recruiter",
                     EmailConfirmed = true,
                 };
 
