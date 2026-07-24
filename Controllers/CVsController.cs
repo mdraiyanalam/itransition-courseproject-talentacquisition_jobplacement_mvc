@@ -188,6 +188,12 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .Include(c => c.Position)
                 .AsQueryable();
 
+            // Recruiters can only see published CVs; Admins see all
+            if (User.IsInRole("Recruiter") && !User.IsInRole("Administrator"))
+            {
+                cvs = cvs.Where(c => c.IsPublished);
+            }
+
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.Trim();
@@ -326,7 +332,7 @@ namespace talentacquisition_jobplacement_mvc.Controllers
 
         // POST: Publish
         [HttpPost]
-        [Authorize(Roles = "Candidate,Recruiter,Administrator")]
+        [Authorize(Roles = "Candidate,Administrator")]
         public async Task<IActionResult> Publish(int id)
         {
             var cv = await _context.CVs
@@ -335,6 +341,10 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cv == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (cv.UserId != userId && !User.IsInRole("Administrator"))
+                return Forbid();
 
             if (!IsCVComplete(cv))
             {
