@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -13,12 +14,32 @@ using talentacquisition_jobplacement_mvc.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Connection String
-var connectionString = builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
-    ?? throw new InvalidOperationException("Connection string 'talentacquisition_jobplacement_mvcContextConnection' not found.");
+//var connectionString = builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
+//    ?? throw new InvalidOperationException("Connection string 'talentacquisition_jobplacement_mvcContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("talentacquisition_jobplacement_mvcContextConnection")
+    ?? throw new InvalidOperationException("Connection string not found.");
 
 // DbContext
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(connectionString));
+
+// DbContext - Use PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
+
+Console.WriteLine("===== CONNECTION STRING =====");
+Console.WriteLine(string.IsNullOrEmpty(connectionString) ? "EMPTY / NULL" : connectionString);
+Console.WriteLine("=============================");
+
+// ========== DATA PROTECTION (FIX FOR CORRELATION FAILED) ==========
+var keysPath = Path.Combine(builder.Environment.ContentRootPath, "keys");
+Directory.CreateDirectory(keysPath);
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("TalentAcquisitionApp");
+// ==================================================================
 
 // Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
@@ -43,6 +64,10 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
         {
             options.ClientId = googleClientId;
             options.ClientSecret = googleClientSecret;
+            options.CallbackPath = "/signin-google";
+            options.SaveTokens = true;
+            options.CorrelationCookie.SameSite = SameSiteMode.None;
+            options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
         });
     Console.WriteLine("✅ Google Authentication enabled.");
 }
@@ -50,6 +75,18 @@ else
 {
     Console.WriteLine("⚠️ Google Authentication is disabled.");
 }
+
+// ========== COOKIE POLICY (VERY IMPORTANT ON RENDER) ==========
+builder.Services.ConfigureExternalCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
 
 // Localization - resources path
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -94,28 +131,39 @@ var app = builder.Build();
 // QuestPDF License
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Evaluation;
 
-// Seeding
+// Apply migrations + Seed data on startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+
+        Console.WriteLine(">>> Dropping and recreating database...");
+        db.Database.EnsureDeleted();   // Deletes everything
+        db.Database.EnsureCreated();   // Creates all tables from the current model
+        Console.WriteLine(">>> Database recreated successfully");
+
+        // Seed Roles
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         string[] roleNames = { "Administrator", "Recruiter", "Candidate" };
+
         foreach (var roleName in roleNames)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 await roleManager.CreateAsync(new IdentityRole(roleName));
+                Console.WriteLine($">>> Role created: {roleName}");
             }
         }
+
         await SeedData.Initialize(services);
-        Console.WriteLine("✅ Database seeded successfully.");
+        Console.WriteLine(">>> Database seeded successfully");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        Console.WriteLine(">>> ERROR: " + ex.Message);
+        Console.WriteLine(ex.ToString());
     }
 }
 
