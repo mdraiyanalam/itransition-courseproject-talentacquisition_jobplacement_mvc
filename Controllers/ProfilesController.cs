@@ -307,6 +307,15 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public async Task<IActionResult> SaveProject(Project project)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // ===== FIX FOR POSTGRESQL DATETIME =====
+            if (project.StartDate.Kind == DateTimeKind.Unspecified)
+                project.StartDate = DateTime.SpecifyKind(project.StartDate, DateTimeKind.Utc);
+
+            if (project.EndDate.HasValue && project.EndDate.Value.Kind == DateTimeKind.Unspecified)
+                project.EndDate = DateTime.SpecifyKind(project.EndDate.Value, DateTimeKind.Utc);
+            // =======================================
+
             var profile = await _context.CandidateProfiles.FirstOrDefaultAsync(cp => cp.UserId == userId);
             if (profile == null) return NotFound();
 
