@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace talentacquisition_jobplacement_mvc.Hubs
 {
+    [Authorize(Roles = "Candidate,Recruiter,Administrator")]
     public class DiscussionHub : Hub
     {
         public async Task SendMessage(string user, string message)
