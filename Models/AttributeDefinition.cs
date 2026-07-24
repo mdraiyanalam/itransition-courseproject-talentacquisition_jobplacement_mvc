@@ -24,6 +24,17 @@ namespace talentacquisition_jobplacement_mvc.Models
         [StringLength(500)]
         public string? Description { get; set; }
 
+        // Validation tuning fields
+        [Range(1, 10000, ErrorMessage = "Max length must be between 1 and 10000")]
+        public int? MaxLength { get; set; }
+
+        // Regex pattern for client/server side validation (optional)
+        public string? RegexPattern { get; set; }
+
+        // Numeric range validators (for numeric types)
+        public double? MinValue { get; set; }
+        public double? MaxValue { get; set; }
+
         public string? Icon { get; set; }
     }
 }
