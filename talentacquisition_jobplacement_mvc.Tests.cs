@@ -35,9 +35,64 @@ namespace talentacquisition_jobplacement_mvc.Tests
     // Stub for AccessRuleEvaluator
     public static class AccessRuleEvaluator
     {
+        // Very small rule evaluator used by unit tests: supports numeric and string equality, missing attribute -> false.
         public static bool EvaluateRules(List<AccessRule> rules, CandidateProfile candidate, List<AttributeDefinition> attributes)
         {
-            return true; // Default to true for testing
+            if (rules == null || rules.Count == 0) return true;
+n            // candidate.ProfileAttributes may be null
+            var profileAttrs = candidate?.ProfileAttributes ?? new List<CandidateProfileAttribute>();
+n            foreach (var rule in rules)
+            {
+                try
+                {
+                    var doc = System.Text.Json.JsonDocument.Parse(rule.RulesJson);
+                    if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array) continue;
+n                    foreach (var el in doc.RootElement.EnumerateArray())
+                    {
+                        var attributeId = el.GetProperty("attributeId").GetInt32();
+                        var op = el.GetProperty("operator").GetString();
+                        var value = el.GetProperty("value").GetString();
+n                        // find profile value
+                        var prof = profileAttrs.FirstOrDefault(pa => pa.AttributeDefinitionId == attributeId);
+                        if (prof == null || string.IsNullOrEmpty(prof.Value))
+                        {
+                            return false; // missing required attribute
+                        }
+n                        var left = prof.Value;
+                        // Try numeric comparison if possible
+                        if (double.TryParse(left, out var leftNum) && double.TryParse(value, out var rightNum))
+                        {
+                            switch (op)
+                            {
+                                case ">": if (!(leftNum > rightNum)) return false; break;
+                                case "<": if (!(leftNum < rightNum)) return false; break;
+                                case ">=": if (!(leftNum >= rightNum)) return false; break;
+                                case "<=": if (!(leftNum <= rightNum)) return false; break;
+                                case "=": if (!(Math.Abs(leftNum - rightNum) < 1e-9)) return false; break;
+                                default: return false;
+                            }
+                        }
+                        else
+                        {
+                            // string equality (case-insensitive)
+                            if (op == "=")
+                            {
+                                if (!string.Equals(left, value, StringComparison.OrdinalIgnoreCase)) return false;
+                            }
+                            else
+                            {
+                                // unsupported operator for strings -> fail safe
+                                return false;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    return false; // parsing issue -> deny access
+                }
+            }
+n            return true;
         }
     }
 
