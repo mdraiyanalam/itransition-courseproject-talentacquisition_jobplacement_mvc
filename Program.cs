@@ -126,6 +126,9 @@ builder.Services.AddSingleton<IEmailSender, GmailEmailSender>();
     }
 }
 
+// Salesforece Service
+builder.Services.AddHttpClient<SalesforceService>();
+
 var app = builder.Build();
 
 // QuestPDF License

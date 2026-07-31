@@ -45,7 +45,7 @@ namespace talentacquisition_jobplacement_mvc.Services
                     col.Item().Text("Curriculum Vitae")
                         .FontSize(28).Bold().FontColor(Colors.Blue.Darken2);
 
-                    col.Item().Text("TalentHub Recruitment Platform")
+                    col.Item().Text("TalentH Acquasition  Platform")
                         .FontSize(12).FontColor(Colors.Grey.Medium);
                 });
             });

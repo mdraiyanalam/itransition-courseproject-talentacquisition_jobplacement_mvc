@@ -1,0 +1,57 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.ViewModels.SalesforceExportViewModel
+
+@{
+    ViewData["Title"] = "Export to Salesforce";
+}
+
+<h2>Export Profile to Salesforce</h2>
+<p class="text-muted">This will create an Account and a linked Contact in your Salesforce org.</p>
+
+<form asp-action="ExportToSalesforce" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FullName" class="form-label"></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Company" class="form-label"></label>
+            <input asp-for="Company" class="form-control" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Industry" class="form-label"></label>
+            <input asp-for="Industry" class="form-control" placeholder="e.g. Information Technology" />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" placeholder="e.g. Software Developer" />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Notes" class="form-label"></label>
+        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-cloud-upload"></i> Create in Salesforce
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

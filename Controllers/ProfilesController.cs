@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
+using talentacquisition_jobplacement_mvc.Services;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
@@ -14,15 +15,18 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly SalesforceService _salesforceService;
 
         public ProfilesController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            SalesforceService salesforceService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _salesforceService = salesforceService;
         }
 
         // GET: My Professional Profile (or Read-only for Recruiters)
@@ -406,5 +410,53 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 }
             }
         }
+
+        // GET: Export to Salesforce form
+        [HttpGet]
+        public async Task<IActionResult> ExportToSalesforce()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+
+            var model = new Models.ViewModels.SalesforceExportViewModel
+            {
+                FullName = user.FullName ?? "",
+                Email = user.Email ?? "",
+                Phone = user.PhoneNumber
+            };
+
+            return View(model);
+        }
+
+        // POST: Create Account + Contact in Salesforce
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExportToSalesforce(Models.ViewModels.SalesforceExportViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            try
+            {
+                var (accountId, contactId) = await _salesforceService.CreateAccountAndContactAsync(
+                    model.FullName,
+                    model.Email,
+                    model.Company,
+                    model.Phone,
+                    model.Industry,
+                    model.Title,
+                    model.Notes);
+
+                TempData["Success"] = $"Successfully created in Salesforce! Account ID: {accountId}, Contact ID: {contactId}";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Salesforce error: " + ex.Message);
+                return View(model);
+            }
+        }
+
     }
 }

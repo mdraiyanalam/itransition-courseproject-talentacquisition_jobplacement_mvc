@@ -8,6 +8,17 @@
 
 <h1 class="mb-4">@(isReadOnly ? "Candidate Profile" : "My Professional Profile")</h1>
 
+@* ===== SALESFORCE BUTTON ===== *@
+@if (!isReadOnly && User.Identity?.IsAuthenticated == true)
+{
+    <div class="mb-3">
+        <a asp-action="ExportToSalesforce" class="btn btn-outline-primary">
+            <i class="bi bi-cloud-upload"></i> Export to Salesforce
+        </a>
+    </div>
+}
+@* ============================= *@
+
 @if (isReadOnly)
 {
     <div class="alert alert-info">
