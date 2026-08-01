@@ -1,0 +1,29 @@
+﻿@model talentacquisition_jobplacement_mvc.Models.ViewModels.SupportTicketViewModel
+
+@{
+    ViewData["Title"] = "Create Support Ticket";
+}
+
+<h2>Create Support Ticket</h2>
+
+<form asp-action="CreateSupportTicket" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Summary" class="form-label"></label>
+        <textarea asp-for="Summary" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Summary" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Priority" class="form-label"></label>
+        <select asp-for="Priority" class="form-select">
+            <option value="High">High</option>
+            <option value="Average">Average</option>
+            <option value="Low">Low</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Ticket</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

@@ -8,6 +8,35 @@
 <h1>@Model.Title</h1>
 <p class="lead">@Model.Description</p>
 
+@if (User.IsInRole("Recruiter") || User.IsInRole("Administrator"))
+{
+    <div class="mb-4">
+        <form asp-action="GenerateApiToken" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-key"></i> Generate API Token
+            </button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.ApiToken))
+        {
+            <div class="alert alert-info mt-3">
+                <strong>API Token:</strong>
+                <code id="apiToken">@Model.ApiToken</code>
+                <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="copyToken()">
+                    Copy
+                </button>
+                <br />
+                <small class="text-muted">
+                    API URL:
+                    <code>/api/positions/@Model.Id/stats?token=@Model.ApiToken</code>
+                </small>
+            </div>
+        }
+    </div>
+}
+
 <!-- Tabs -->
 <ul class="nav nav-tabs mb-4" id="positionTabs" role="tablist">
     <li class="nav-item" role="presentation">

@@ -283,5 +283,19 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             TempData["Success"] = "Comment posted successfully!";
             return RedirectToAction(nameof(Details), new { id = PositionId });
         }
+
+        [HttpPost]
+        [Authorize(Roles = "Recruiter,Administrator")]
+        public async Task<IActionResult> GenerateApiToken(int id)
+        {
+            var position = await _context.Positions.FindAsync(id);
+            if (position == null) return NotFound();
+
+            position.ApiToken = Guid.NewGuid().ToString("N");
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"API Token generated: {position.ApiToken}";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 }

@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Security.Claims;
+using System.Text.Json;
 using talentacquisition_jobplacement_mvc.Data;
 using talentacquisition_jobplacement_mvc.Models;
+using talentacquisition_jobplacement_mvc.Models.ViewModels;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
@@ -21,21 +24,18 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            // Latest Positions
             var latestPositions = await _context.Positions
                 .Include(p => p.CVs)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(8)
                 .ToListAsync();
 
-            // Most Popular Positions (Top 5 by CV count)
             var popularPositions = await _context.Positions
                 .Include(p => p.CVs)
                 .OrderByDescending(p => p.CVs.Count)
                 .Take(5)
                 .ToListAsync();
 
-            // Tag Cloud - aggregate from Positions and Projects
             var positionTags = await _context.Positions
                 .Where(p => !string.IsNullOrEmpty(p.ProjectTags))
                 .Select(p => p.ProjectTags)
@@ -61,13 +61,10 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             ViewBag.LatestPositions = latestPositions;
             ViewBag.PopularPositions = popularPositions;
             ViewBag.TagCloud = tagCloud;
-
-            // Quick Stats
             ViewBag.TotalCVs = await _context.CVs.CountAsync();
             ViewBag.TotalPositions = await _context.Positions.CountAsync();
             ViewBag.TotalCandidates = await _context.Users.CountAsync();
 
-            // Total Recruiters
             var recruiterRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Recruiter");
             ViewBag.TotalRecruiters = recruiterRole != null
                 ? await _context.UserRoles.CountAsync(ur => ur.RoleId == recruiterRole.Id)
@@ -114,6 +111,47 @@ namespace talentacquisition_jobplacement_mvc.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult CreateSupportTicket()
+        {
+            return View(new SupportTicketViewModel());
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateSupportTicket(SupportTicketViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = User.Identity?.Name ?? "Unknown";
+            var roles = string.Join(", ", User.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value));
+
+            var ticket = new
+            {
+                ReportedBy = $"{user} ({roles})",
+                Position = (string?)null,
+                Link = $"{Request.Scheme}://{Request.Host}{Request.Path}",
+                Priority = model.Priority,
+                Summary = model.Summary,
+                AdminEmails = new[] { "mdraiyanalam95@gmail.com", "mdraiyan.alam.1831100642@gmail.com" },
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var json = JsonSerializer.Serialize(ticket, new JsonSerializerOptions { WriteIndented = true });
+            var fileName = $"ticket_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "tickets");
+            Directory.CreateDirectory(path);
+            await System.IO.File.WriteAllTextAsync(Path.Combine(path, fileName), json);
+
+            TempData["Success"] = "Support ticket created successfully! (JSON saved)";
+            return RedirectToAction("Index");
         }
     }
 }

@@ -26,5 +26,8 @@ namespace talentacquisition_jobplacement_mvc.Models
         public ICollection<PositionAttribute> PositionAttributes { get; set; } = new List<PositionAttribute>();
         public ICollection<CV> CVs { get; set; } = new List<CV>();
         public ICollection<DiscussionPost> DiscussionPosts { get; set; } = new List<DiscussionPost>();
+
+        //for odoo
+        public string? ApiToken { get; set; }
     }
 }
