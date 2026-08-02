@@ -19,15 +19,36 @@ namespace talentacquisition_jobplacement_mvc.Services
         public async Task<string> GetAccessTokenAsync()
         {
             var instanceUrl = _config["Salesforce:InstanceUrl"]?.TrimEnd('/');
+
+            if (string.IsNullOrWhiteSpace(instanceUrl))
+                throw new Exception("Salesforce:InstanceUrl is missing or empty. Check environment variables on Render.");
+
+            var consumerKey = _config["Salesforce:ConsumerKey"];
+            var consumerSecret = _config["Salesforce:ConsumerSecret"];
+            var username = _config["Salesforce:Username"];
+            var password = _config["Salesforce:Password"];
+            var securityToken = _config["Salesforce:SecurityToken"];
+
+            if (string.IsNullOrWhiteSpace(consumerKey))
+                throw new Exception("Salesforce:ConsumerKey is missing or empty.");
+            if (string.IsNullOrWhiteSpace(consumerSecret))
+                throw new Exception("Salesforce:ConsumerSecret is missing or empty.");
+            if (string.IsNullOrWhiteSpace(username))
+                throw new Exception("Salesforce:Username is missing or empty.");
+            if (string.IsNullOrWhiteSpace(password))
+                throw new Exception("Salesforce:Password is missing or empty.");
+            if (string.IsNullOrWhiteSpace(securityToken))
+                throw new Exception("Salesforce:SecurityToken is missing or empty.");
+
             var tokenUrl = $"{instanceUrl}/services/oauth2/token";
 
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["grant_type"] = "password",
-                ["client_id"] = _config["Salesforce:ConsumerKey"],
-                ["client_secret"] = _config["Salesforce:ConsumerSecret"],
-                ["username"] = _config["Salesforce:Username"],
-                ["password"] = _config["Salesforce:Password"] + _config["Salesforce:SecurityToken"]
+                ["client_id"] = consumerKey,
+                ["client_secret"] = consumerSecret,
+                ["username"] = username,
+                ["password"] = password + securityToken
             });
 
             var response = await _httpClient.PostAsync(tokenUrl, content);
