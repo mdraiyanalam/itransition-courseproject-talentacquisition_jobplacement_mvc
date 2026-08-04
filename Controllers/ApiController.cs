@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using talentacquisition_jobplacement_mvc.Data;
+using talentacquisition_jobplacement_mvc.Models;
+using talentacquisition_jobplacement_mvc.Models.ViewModels;
 
 namespace talentacquisition_jobplacement_mvc.Controllers
 {
@@ -9,12 +12,15 @@ namespace talentacquisition_jobplacement_mvc.Controllers
     public class ApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _config;
 
-        public ApiController(ApplicationDbContext context)
+        public ApiController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
+        // ===== Existing endpoint (for Odoo Import) =====
         [HttpGet("positions/{id}/stats")]
         public async Task<IActionResult> GetPositionStats(int id, [FromQuery] string token)
         {
@@ -30,7 +36,6 @@ namespace talentacquisition_jobplacement_mvc.Controllers
             if (string.IsNullOrEmpty(position.ApiToken) || position.ApiToken != token)
                 return Unauthorized("Invalid API token");
 
-            // Simple aggregated data
             var result = new
             {
                 PositionId = position.Id,
@@ -41,12 +46,44 @@ namespace talentacquisition_jobplacement_mvc.Controllers
                 {
                     Name = pa.AttributeDefinition.Name,
                     Type = pa.AttributeDefinition.Type,
-                    // You can add real aggregation later
                     AggregatedValue = "Sample aggregation"
                 })
             };
 
             return Ok(result);
+        }
+
+        // ===== New endpoint (for Odoo Export) =====
+        [HttpPost("positions")]
+        public async Task<IActionResult> CreatePositionFromOdoo(
+            [FromHeader(Name = "X-Api-Key")] string apiKey,
+            [FromBody] OdooPositionDto model)
+        {
+            var expectedKey = _config["ApiSettings:ExportApiKey"];
+
+            if (string.IsNullOrEmpty(apiKey) || apiKey != expectedKey)
+                return Unauthorized(new { message = "Invalid API Key" });
+
+            if (string.IsNullOrWhiteSpace(model.Title))
+                return BadRequest(new { message = "Title is required" });
+
+            var position = new Position
+            {
+                Title = model.Title.Trim(),
+                Description = model.Description ?? string.Empty,
+                Company = model.Company ?? string.Empty,
+                ProjectTags = model.ProjectTags,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Positions.Add(position);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                id = position.Id,
+                message = "Position created successfully in TalentHub"
+            });
         }
     }
 }
